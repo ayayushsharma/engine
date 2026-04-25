@@ -7,8 +7,8 @@ import (
 
 	gameData "ausi/engine/data"
 
-	level_d "ausi/engine/definitions/level"
-	game_d "ausi/engine/definitions/game"
+	"ausi/engine/definitions/gamedef"
+	"ausi/engine/definitions/leveldef"
 )
 
 const (
@@ -164,7 +164,6 @@ func main() {
 	player.speed = 0
 	player.canJump = false
 
-
 	envItems := []EnvItem{
 		{rl.NewRectangle(0, 0, 1000, 400), 0, rl.LightGray},
 		// {rl.NewRectangle(0, 400, 1000, 200), 1, rl.Gray},
@@ -173,13 +172,13 @@ func main() {
 		// {rl.NewRectangle(650, 300, 100, 10), 1, rl.Gray},
 	}
 
-	for _, block := range levelData[int32(level_d.BlockGround)] {
+	for _, block := range levelData[int32(leveldef.BlockGround)] {
 		envItem := EnvItem{
 			rl.NewRectangle(
 				float32(block.X),
 				float32(block.Y),
-				float32(game_d.LevelBlockSize),
-				float32(game_d.LevelBlockSize),
+				float32(gamedef.LevelBlockSize),
+				float32(gamedef.LevelBlockSize),
 			),
 			1,
 			rl.Brown,
@@ -187,13 +186,13 @@ func main() {
 		envItems = append(envItems, envItem)
 	}
 
-	for _, block := range levelData[int32(level_d.BlockPassThroughPlatform)] {
+	for _, block := range levelData[int32(leveldef.BlockPassThroughPlatform)] {
 		envItem := EnvItem{
 			rl.NewRectangle(
 				float32(block.X),
 				float32(block.Y),
-				float32(game_d.LevelBlockSize),
-				float32(game_d.LevelBlockSize),
+				float32(gamedef.LevelBlockSize),
+				float32(gamedef.LevelBlockSize),
 			),
 			1,
 			rl.Gray,
@@ -201,20 +200,19 @@ func main() {
 		envItems = append(envItems, envItem)
 	}
 
-	for _, block := range levelData[int32(level_d.BlockDeath)] {
+	for _, block := range levelData[int32(leveldef.BlockDeath)] {
 		envItem := EnvItem{
 			rl.NewRectangle(
 				float32(block.X),
 				float32(block.Y),
-				float32(game_d.LevelBlockSize),
-				float32(game_d.LevelBlockSize),
+				float32(gamedef.LevelBlockSize),
+				float32(gamedef.LevelBlockSize),
 			),
 			1,
 			rl.Green,
 		}
 		envItems = append(envItems, envItem)
 	}
-
 
 	var camera rl.Camera2D
 	camera.Target = player.position

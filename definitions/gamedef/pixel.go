@@ -1,3 +1,3 @@
-package game
+package gamedef
 
 const LevelBlockSize int32 = 16 // in pixels

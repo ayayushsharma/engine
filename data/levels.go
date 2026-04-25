@@ -1,13 +1,12 @@
 package data
 
 import (
+	"ausi/engine/common/log"
 	"ausi/engine/data/ldtk"
-	level_d "ausi/engine/definitions/level"
-	game_d "ausi/engine/definitions/game"
+	"ausi/engine/definitions/gamedef"
+	"ausi/engine/definitions/leveldef"
 	"errors"
 	"os"
-
-	"log/slog"
 )
 
 var LevelNotFoundErr = errors.New("Level not found")
@@ -17,7 +16,7 @@ var loadedData ldtk.LdtkJSON
 
 func getRawGroundGrid(level ldtk.Level) (layer ldtk.LayerInstance, err error) {
 	for _, layerData := range level.LayerInstances {
-		if layerData.Identifier == string(level_d.LayerGroundGrid) {
+		if layerData.Identifier == string(leveldef.LayerGroundGrid) {
 			layer = layerData
 			return
 		}
@@ -37,46 +36,63 @@ func getLevelData(levelId string) (level ldtk.Level, err error) {
 	return
 }
 
-
 type coordinates struct {
 	X int32
 	Y int32
+}
+
+func groundGridRegisteredBlocks() (registeredBlock map[int32]bool) {
+	registeredBlock = make(map[int32]bool)
+
+	blocksToRegister := []int32{
+		int32(leveldef.BlockGround),
+		int32(leveldef.BlockPassThroughPlatform),
+		int32(leveldef.BlockDeath),
+	}
+
+	for _, block := range blocksToRegister {
+		registeredBlock[block] = true
+	}
+
+	return
 }
 
 func GetGroundItems(
 	levelId string,
 ) (ground map[int32][]coordinates, err error) {
 	level, err := getLevelData(levelId)
-	
-	if (err != nil) {
+
+	if err != nil {
 		return
 	}
-	slog.Info("Level data loaded successfully")
+	log.Debug("Level data loaded successfully")
 
 	layer, err := getRawGroundGrid(level)
-	slog.Info("Level RAW Ground data loaded successfully")
+	log.Debug("Level RAW Ground data loaded successfully")
 
 	layerHeight := layer.CHei
 	layerWidth := layer.CWid
 
-	slog.Info("Layer Size", "width", layerWidth, "Height", layerHeight)
+	log.Debug("Layer Size: %d %d", layerWidth, layerHeight)
 
 	index := 0
 	grid := layer.IntGridCSV
 
 	ground = make(map[int32][]coordinates)
 
-	for row := range(layerHeight) {
-		for col := range(layerWidth) {
+	registeredBlocks := groundGridRegisteredBlocks()
+
+	for row := range layerHeight {
+		for col := range layerWidth {
 			currentBlock := int32(grid[index])
 			index++
-			if _, ok := level_d.RegisteredBlock[currentBlock]; !ok {
+			if _, ok := registeredBlocks[currentBlock]; !ok {
 				continue
 			}
 			ground[currentBlock] = append(
 				ground[currentBlock], coordinates{
-					X: game_d.LevelBlockSize * int32(col),
-					Y: game_d.LevelBlockSize * int32(row),
+					X: gamedef.LevelBlockSize * int32(col),
+					Y: gamedef.LevelBlockSize * int32(row),
 				},
 			)
 		}
@@ -84,7 +100,6 @@ func GetGroundItems(
 
 	return
 }
-
 
 func init() {
 	contents, err := os.ReadFile("resources/levels/levels.ldtk")
@@ -94,5 +109,4 @@ func init() {
 	}
 
 	loadedData, err = ldtk.UnmarshalLdtkJSON(contents)
-
 }
