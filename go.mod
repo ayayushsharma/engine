@@ -1,4 +1,4 @@
-module ausi/engine
+module ausi
 
 go 1.25.6
 

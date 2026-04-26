@@ -3,7 +3,7 @@
 package log
 
 import (
-	"ausi/engine/constants"
+	"ausi/constants"
 	rl "github.com/gen2brain/raylib-go/raylib"
 )
 

@@ -1,10 +1,11 @@
 package data
 
 import (
-	"ausi/engine/common/log"
-	"ausi/engine/data/ldtk"
-	"ausi/engine/definitions/gamedef"
-	"ausi/engine/definitions/leveldef"
+	"ausi/data/ldtk"
+	gamedef "ausi/internal/world"
+	leveldef "ausi/internal/world"
+	"ausi/log"
+
 	"errors"
 	"os"
 )
@@ -91,8 +92,8 @@ func GetGroundItems(
 			}
 			ground[currentBlock] = append(
 				ground[currentBlock], coordinates{
-					X: gamedef.LevelBlockSize * int32(col),
-					Y: gamedef.LevelBlockSize * int32(row),
+					X: gamedef.BaseBlockSize * int32(col),
+					Y: gamedef.BaseBlockSize * int32(row),
 				},
 			)
 		}

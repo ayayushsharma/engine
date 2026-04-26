@@ -1,4 +1,4 @@
-package leveldef
+package world
 
 type layerInstance string
 
