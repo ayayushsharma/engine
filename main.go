@@ -166,10 +166,6 @@ func main() {
 
 	envItems := []EnvItem{
 		{rl.NewRectangle(0, 0, 1000, 400), 0, rl.LightGray},
-		// {rl.NewRectangle(0, 400, 1000, 200), 1, rl.Gray},
-		// {rl.NewRectangle(300, 200, 400, 10), 1, rl.Gray},
-		// {rl.NewRectangle(250, 300, 100, 10), 1, rl.Gray},
-		// {rl.NewRectangle(650, 300, 100, 10), 1, rl.Gray},
 	}
 
 	for _, block := range levelData[int32(leveldef.BlockGround)] {
@@ -237,7 +233,7 @@ func main() {
 		"Player push camera on getting too close to screen edge",
 	}
 
-	rl.SetTargetFPS(60)
+	rl.SetTargetFPS(144)
 
 	rl.SetWindowSize(screenWidth, screenHeight)
 
@@ -286,6 +282,8 @@ func main() {
 		rl.DrawText("- C to change camera mode", 40, 100, 10, rl.DarkGray)
 		rl.DrawText("Current camera mode:", 20, 120, 10, rl.Black)
 		rl.DrawText(cameraDescriptions[cameraOption], 40, 140, 10, rl.DarkGray)
+
+		rl.DrawFPS(20, 160)
 
 		rl.EndDrawing()
 	}

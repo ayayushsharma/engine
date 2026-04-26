@@ -1,2 +1,6 @@
 [tools]
 go = "1.25.6"
+
+[tasks.format]
+run = "gofmt -w -l -s ."
+description = "Formats codebase"
