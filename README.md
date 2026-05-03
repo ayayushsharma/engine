@@ -1,5 +1,7 @@
 # Hobby project
 
+I build the engine first in golang. But for target compatibility issues, I have switches
+to zig for the engine development. This is already legacy code.
 I am seeing whether I can build a 2D Game with a custom engine or not. Will find
 out with time
 
