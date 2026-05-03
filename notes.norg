@@ -1,0 +1,198 @@
+@code shell
+mygame/
+├── build.zig
+├── build.zig.zon
+│
+├── base/                          # assets, maps, configs (doom's base/)
+│   ├── maps/
+│   ├── materials/
+│   ├── sounds/
+│   └── default.cfg
+│
+└── src/
+    ├── main.zig
+    │
+    ├── lib/                       # Go's pkg/ — zero game knowledge
+    │   ├── math/                  # Vec2, Rect, Bounds, Plane — your types
+    │   ├── containers/            # List, Pool, HashMap
+    │   ├── formats/               # MapFile, TileSet — shared data formats
+    │   ├── lexer.zig              # cfg/decl file parsing
+    │   └── str.zig
+    │
+    ├── engine/                    # Go's internal/engine — raylib lives HERE only
+    │   ├── common.zig             # init/shutdown, global hub
+    │   ├── session.zig            # main loop, timestep, scene stack
+    │   ├── cmd_system.zig         # console commands
+    │   ├── cvar_system.zig        # config vars
+    │   ├── file_system.zig        # asset loading, pak files
+    │   ├── decl_manager.zig       # declarative asset definitions
+    │   │
+    │   ├── renderer/              # RenderSystem — all rl.Draw* calls live here
+    │   │   ├── render_system.zig
+    │   │   ├── render_world.zig
+    │   │   ├── material.zig
+    │   │   └── model.zig
+    │   │
+    │   ├── sound/                 # SoundSystem — all rl audio calls live here
+    │   │   ├── snd_system.zig
+    │   │   ├── snd_world.zig
+    │   │   └── snd_emitter.zig
+    │   │
+    │   ├── input/                 # ActionMap wrapping rl.IsKeyDown etc.
+    │   │   └── input.zig
+    │   │
+    │   ├── resource/              # texture/sound/font cache
+    │   │   └── resource.zig
+    │   │
+    │   ├── ui/                    # in-game GUI (doom's ui/)
+    │   │   ├── window.zig
+    │   │   └── user_interface.zig
+    │   │
+    │   └── cm/                    # collision model (doom's cm/)
+    │       ├── trace.zig
+    │       └── clip.zig
+    │
+    ├── game/                      # Go's internal/game — RAYLIB-FREE enforced
+    │   ├── game_local.zig         # implements the Game interface
+    │   ├── entity.zig             # base entity
+    │   ├── actor.zig
+    │   ├── player.zig
+    │   ├── weapon.zig
+    │   ├── projectile.zig
+    │   ├── item.zig
+    │   ├── mover.zig
+    │   ├── trigger.zig
+    │   ├── world_spawn.zig
+    │   │
+    │   ├── physics/               # pure logic, uses lib/math not rl
+    │   │   ├── physics_player.zig
+    │   │   ├── physics_actor.zig
+    │   │   └── force.zig
+    │   │
+    │   ├── ai/
+    │   │   ├── ai.zig
+    │   │   ├── aas.zig
+    │   │   └── ai_pathing.zig
+    │   │
+    │   ├── anim/
+    │   │   ├── anim.zig
+    │   │   └── anim_blend.zig
+    │   │
+    │   └── script/                # doom's idScript equivalent
+    │       ├── script_program.zig
+    │       └── script_thread.zig
+    │
+    ├── scenes/                    # Go's internal/scenes
+    │   ├── scene.zig              # Scene interface + Stack
+    │   ├── play.zig               # gameplay scene
+    │   ├── menu.zig
+    │   └── pause.zig
+    │
+    └── tools/                     # only compiled with -Dtools=true
+        ├── radiant/               # map editor
+        └── decl/                  # decl browser
+@end
+
+
+
+Camera is a genuinely tricky placement question because it sits at the boundary between engine and game.
+
+## The problem
+
+The camera *reads* game state (player position, room bounds, shake events) but *writes* to the renderer (view matrix, projection). That makes it feel like it belongs in both places, which means you have to make a deliberate call.
+
+## The rule to decide
+
+**Ask: does the camera contain game rules?**
+
+A camera that just follows a point and passes a matrix to the renderer — **engine**.
+A camera that knows about the player, cutscenes, lock-on targets, trauma systems — **game**.
+
+In practice for most games it splits into two pieces.
+
+## Where each piece lives
+
+```
+src/
+├── engine/
+│   └── camera/
+│       └── camera.zig        # CameraState — position, target, fov,
+│                             # zoom, view + projection matrix output.
+│                             # Knows nothing about Player or levels.
+│                             # Just math. Calls rl.Camera2D / Camera3D.
+│
+└── game/
+    └── camera.zig            # GameCamera — owns a CameraState,
+                              # contains all the rules:
+                              #   - follow player with lerp
+                              #   - clamp to level bounds
+                              #   - trauma/shake system
+                              #   - cutscene target switching
+                              #   - lock-on logic
+```
+
+The dependency arrow is one-way:
+
+```
+game/camera.zig
+    └── imports engine/camera/camera.zig (CameraState)
+    └── imports game/player.zig          (to read position)
+    └── imports lib/math                 (lerp, bounds)
+
+engine/camera/camera.zig
+    └── imports lib/math only
+    └── imports raylib (rl.Camera2D)
+```
+
+`engine/camera` never knows `game/` exists — same rule as the rest of the engine.
+
+## What each file actually looks like
+
+```zig
+// engine/camera/camera.zig
+pub const CameraState = struct {
+    position: Vec2,
+    target:   Vec2,
+    zoom:     f32,
+    rotation: f32,
+
+    pub fn toRaylib(self: CameraState) rl.Camera2D { ... }
+    pub fn screenToWorld(self: CameraState, p: Vec2) Vec2 { ... }
+    pub fn worldToScreen(self: CameraState, p: Vec2) Vec2 { ... }
+};
+```
+
+```zig
+// game/camera.zig
+pub const GameCamera = struct {
+    state:       CameraState,
+    trauma:      f32,          // shake intensity 0-1
+    bounds:      ?Rect,        // level clamp bounds
+
+    pub fn follow(self: *GameCamera, target: Vec2, dt: f32) void {
+        // lerp state.target toward target
+    }
+
+    pub fn addTrauma(self: *GameCamera, amount: f32) void {
+        self.trauma = @min(1.0, self.trauma + amount);
+    }
+
+    pub fn update(self: *GameCamera, dt: f32) void {
+        // apply shake, clamp to bounds, decay trauma
+    }
+
+    pub fn toCameraState(self: GameCamera) CameraState {
+        // bake shake offset into a final CameraState for the renderer
+    }
+};
+```
+
+Then in `scenes/play.zig`:
+
+```zig
+cam.follow(player.position, dt);
+cam.update(dt);
+renderer.beginFrame(cam.toCameraState());
+```
+
+This way `engine/camera` is reusable across any game you make, and `game/camera` is where all the feel and rules live — exactly the same split Doom used for its `idPlayerView` (game) vs. the raw view matrix submitted to `RenderSystem` (engine).

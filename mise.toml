@@ -1,0 +1,28 @@
+[tools]
+zig = "0.16"
+"npm:http-server" = "latest"
+
+[tasks.format]
+run = "zig fmt ."
+description = "Formats codebase"
+
+[tasks.debug-run]
+run = "zig build run"
+description = "Runs the Game"
+
+[tasks.run]
+run = "zig build run -Doptimize=ReleaseFast"
+description = "Runs the Game"
+
+[tasks.web-build]
+run = "zig build -Dtarget=wasm32-emscripten"
+description = "Builds project for web"
+
+[tasks.debug-run-web]
+depends = ["web-build"]
+run = "http-server ./zig-out/web"
+description = "Builds project for web"
+
+[tasks.try]
+run = "zig build check"
+description = "Checks if project compiles or not"
