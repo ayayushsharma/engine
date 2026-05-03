@@ -55,7 +55,7 @@ pub const Game = struct {
         self.camera.begin();
 
         for (self.flat_environment.items) |items| {
-            rl.drawRectangleRec(items.rectangle, rl.Color.brown);
+            rl.drawRectangleRec(items.rectangle, items.color);
         }
 
         assert(self.player.hitbox != null);

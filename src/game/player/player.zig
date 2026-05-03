@@ -37,10 +37,10 @@ pub const Player = struct {
     pub fn updatePlayer(self: *Player, envItems: *std.ArrayList(RectItem), delta: f32) void {
         assert(delta >= 0);
 
-        if (rl.isKeyDown(rl.KeyboardKey.left)) {
+        if (rl.isKeyDown(rl.KeyboardKey.a) or rl.isKeyDown(rl.KeyboardKey.left)) {
             self.position.x -= HORIZONTAL_SPEED * delta;
         }
-        if (rl.isKeyDown(rl.KeyboardKey.right)) {
+        if (rl.isKeyDown(rl.KeyboardKey.d) or rl.isKeyDown(rl.KeyboardKey.right)) {
             self.position.x += HORIZONTAL_SPEED * delta;
         }
 
@@ -49,9 +49,13 @@ pub const Player = struct {
             self.can_jump = false;
         }
 
+        if (rl.isKeyDown(rl.KeyboardKey.s) or rl.isKeyDown(rl.KeyboardKey.down)) {
+            self.vertical_speed = JUMP_SPEED;
+        }
+
         var hitObstacle = false;
         for (envItems.items) |*item| {
-            if (item.is_blocking and
+            if (item.is_blocking == .Blocking and
                 item.rectangle.x <= self.position.x and
                 item.rectangle.x + item.rectangle.width >= self.position.x and
                 item.rectangle.y >= self.position.y and

@@ -35,6 +35,24 @@ pub fn getLevelData(ldtk_json: data.ldtk.LdtkJSON, level_id: []const u8) !data.l
 
 pub const GridBlocks = std.AutoHashMap(world.defs.GroundGridBlock, std.ArrayList(engine.cm.models.RectangleItem));
 
+fn getBlockColor(block: world.defs.GroundGridBlock) rl.Color {
+    return switch (block) {
+        .Ground => rl.Color.brown,
+        .PassThroughPlatform => rl.Color.green,
+        .Death => rl.Color.red,
+        .Blank=> rl.Color.light_gray,
+    };
+}
+
+fn getCollisionType(block: world.defs.GroundGridBlock) engine.cm.models.CollisionType {
+    return switch (block) {
+        .Ground => .Blocking,
+        .PassThroughPlatform => .TopBlocking,
+        .Death => .Blocking,
+        .Blank=> .NotBlocking,
+    };
+}
+
 pub fn getGroundItems(
     allocator: mem.Allocator,
     path: []const u8,
@@ -113,8 +131,8 @@ pub fn getGroundItems(
                         .height = cast(f32, continous_blocks) * BASE_BLOCK_SIZE,
                         .width = BASE_BLOCK_SIZE,
                     },
-                    .color = null,
-                    .is_blocking = true,
+                    .color = getBlockColor(prev_block_type),
+                    .is_blocking = getCollisionType(prev_block_type),
                 });
                 continous_blocks = 1;
                 continue;
@@ -135,8 +153,8 @@ pub fn getGroundItems(
                         .height = cast(f32, continous_blocks) * BASE_BLOCK_SIZE,
                         .width = BASE_BLOCK_SIZE,
                     },
-                    .color = null,
-                    .is_blocking = true,
+                    .color = getBlockColor(current_block_type),
+                    .is_blocking = getCollisionType(current_block_type),
                 });
                 continous_blocks = 1;
             }
