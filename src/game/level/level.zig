@@ -91,7 +91,6 @@ pub fn getGroundItems(
         var continous_blocks: i32 = 1;
 
         for (1..layer_height) |row| {
-
             const is_same_block = matrix[row - 1][col] == matrix[row][col];
 
             if (is_same_block) {

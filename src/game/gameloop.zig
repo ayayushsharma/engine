@@ -6,6 +6,8 @@ const level = @import("level/level.zig");
 const engine = @import("engine");
 const world = @import("world/root.zig");
 
+const assert = std.debug.assert;
+
 test {
     std.testing.refAllDecls(@This());
 }
@@ -51,20 +53,17 @@ pub const Game = struct {
         self.camera.follow(self.player.position);
 
         self.camera.begin();
-        defer self.camera.end();
-       
+
         for (self.flat_environment.items) |items| {
             rl.drawRectangleRec(items.rectangle, rl.Color.brown);
         }
 
-        const playerRect = rl.Rectangle.init(
-            self.player.position.x - 20.0,
-            self.player.position.y - 40.0,
-            40,
-            40
-        );
-        rl.drawRectangleRec(playerRect, rl.Color.red);
+        assert(self.player.hitbox != null);
+
+        rl.drawRectangleRec(self.player.hitbox.?, rl.Color.red);
         rl.drawCircleV(self.player.position, 5, rl.Color.gold);
+
+        self.camera.end();
 
         rl.drawText("Controls:", 20, 20, 10, rl.Color.black);
         rl.drawText("- Right/Left to move", 40, 40, 10, rl.Color.dark_gray);
