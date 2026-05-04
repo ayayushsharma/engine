@@ -19,8 +19,12 @@ pub fn build(b: *std.Build) !void {
         .optimize = optimize,
     });
 
-    const data_mod = b.createModule(.{ .root_source_file = b.path("src/data/root.zig") });
     const log_mod = b.createModule(.{ .root_source_file = b.path("src/log.zig") });
+    log_mod.addImport("raylib", raylib);
+
+    const data_mod = b.createModule(.{ .root_source_file = b.path("src/data/root.zig") });
+    data_mod.addImport("raylib", raylib);
+
     const engine_mod = b.createModule(.{ .root_source_file = b.path("src/engine/root.zig") });
     engine_mod.addImport("raylib", raylib);
 

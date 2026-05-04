@@ -21,12 +21,12 @@ pub fn run_game() !void {
     const level_data = try data.ldtk.loadLevel(allocator, level_data_path);
     defer level_data.deinit();
 
-    const screen_width = 1600;
-    const screen_height = 900;
+    const screen_width = 1200;
+    const screen_height = 700;
 
     var grids = try level.getGroundItems(allocator, level_data_path, level_id);
 
-    var player_obj: player.Player = .init(rl.Vector2{ .x = 400, .y = 280 });
+    var player_obj: player.Player = .init(rl.Vector2{ .x = 400, .y = 280 }, null, null);
     player_obj.can_jump = false;
 
     var camera_obj: engine.Camera = .init(
@@ -37,7 +37,7 @@ pub fn run_game() !void {
 
     var game_obj = try game.Game.init(allocator, &player_obj, &camera_obj, &grids);
     engine.init(.{
-        .fps = 0,
+        .fps = 60,
         .height = screen_height,
         .width = screen_width,
         .title = "Engine",

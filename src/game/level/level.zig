@@ -40,7 +40,7 @@ fn getBlockColor(block: world.defs.GroundGridBlock) rl.Color {
         .Ground => rl.Color.brown,
         .PassThroughPlatform => rl.Color.green,
         .Death => rl.Color.red,
-        .Blank=> rl.Color.light_gray,
+        .Blank => rl.Color.light_gray,
     };
 }
 
@@ -49,7 +49,7 @@ fn getCollisionType(block: world.defs.GroundGridBlock) engine.cm.models.Collisio
         .Ground => .Blocking,
         .PassThroughPlatform => .TopBlocking,
         .Death => .Blocking,
-        .Blank=> .NotBlocking,
+        .Blank => .NotBlocking,
     };
 }
 
