@@ -2,6 +2,7 @@
 // Zig conversion of the LDtk JSON schema types.
 // Requires the standard library's std.json for parsing.
 
+const rl = @import("raylib");
 const std = @import("std");
 const json = std.json;
 const Allocator = std.mem.Allocator;
@@ -746,19 +747,6 @@ pub fn parseLdtkJSON(allocator: Allocator, data: []const u8) !json.Parsed(LdtkJS
 }
 
 pub fn loadLevel(allocator: Allocator, path: []const u8) !json.Parsed(LdtkJSON) {
-    var buffer: [10_000_000]u8 = undefined;
-
-    var threaded: std.Io.Threaded = .init(allocator, .{});
-    defer threaded.deinit();
-
-    const io_interface = threaded.io();
-
-    const last_slash = std.mem.lastIndexOfScalar(u8, path, '/') orelse 0;
-    const base_dir = path[0..last_slash];
-    const file_name = path[last_slash + 1 ..];
-
-    const dir = try std.Io.Dir.cwd().openDir(io_interface, base_dir, .{});
-    const file = try std.Io.Dir.readFile(dir, io_interface, file_name, &buffer);
-
-    return try parseLdtkJSON(allocator, buffer[0..file.len]);
+    const buffer = try rl.loadFileData(path);
+    return try parseLdtkJSON(allocator, buffer);
 }

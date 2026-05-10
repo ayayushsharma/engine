@@ -81,6 +81,7 @@ pub fn build(b: *std.Build) !void {
     const exe = b.addExecutable(.{
         .name = "engine-zig",
         .root_module = exe_mod,
+        .use_llvm = true,
     });
 
     b.installArtifact(exe);
