@@ -3,6 +3,7 @@ const log = @import("log");
 pub const Camera = @import("camera/root.zig").Camera;
 pub const physics = @import("physics/root.zig");
 pub const cm = @import("cm/root.zig");
+pub const renderer = @import("renderer/root.zig");
 
 const rl = @import("raylib");
 

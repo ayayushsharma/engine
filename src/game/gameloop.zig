@@ -19,6 +19,7 @@ pub const Game = struct {
     is_paused: bool = false,
     flat_environment: std.ArrayList(engine.cm.models.RectangleItem),
     allocator: std.mem.Allocator,
+    render_type: engine.renderer.render_type,
 
     pub fn init(
         allocator: std.mem.Allocator,
@@ -48,6 +49,7 @@ pub const Game = struct {
             .environment = environment,
             .is_paused = false,
             .flat_environment = flat_environment, // moved into struct
+            .render_type = .only_hitbox,
         };
     }
 
@@ -63,11 +65,20 @@ pub const Game = struct {
 
         self.camera.begin();
 
-        for (self.flat_environment.items) |items| {
-            rl.drawRectangleRec(items.rectangle, items.color);
+        if (rl.isKeyPressed(rl.KeyboardKey.r)) {
+            if (self.render_type == .only_hitbox) {
+                self.render_type = .all_assets;
+            } else {
+                self.render_type = .only_hitbox;
+            }
         }
-
-        rl.drawRectangleLinesEx(self.player.hitbox, 1.0, rl.Color.red);
+   
+        if (self.render_type == .only_hitbox) {
+            for (self.flat_environment.items) |items| {
+                rl.drawRectangleRec(items.rectangle, items.color);
+            }
+            rl.drawRectangleLinesEx(self.player.hitbox, 1.0, rl.Color.red);
+        }
 
         self.camera.end();
 

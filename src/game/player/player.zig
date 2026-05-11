@@ -113,23 +113,29 @@ pub const Player = struct {
             }
 
             switch (item.is_blocking) {
-                .Blocking => {
+                .Blocking => blk: {
                     if (direction.isUp()) {
                         self.vertical_speed = 0;
                         self.position.y = @ceil(item.rectangle.y + item.rectangle.height);
                         self.is_on_roof = true;
                         self.is_on_ground = false;
                         hit_obstacle = true;
+                        break :blk;
                     }
 
-                    if (direction.isDown() and
+                    // item's top must be between player hitbox
+                    const item_top_between_hithox: bool = (
                         item.rectangle.y > self.hitbox.y and
-                        item.rectangle.y < self.hitbox.y + self.hitbox.height) {
+                        item.rectangle.y < self.hitbox.y + self.hitbox.height
+                    );
+
+                    if (direction.isDown() and item_top_between_hithox) {
                         self.vertical_speed = 0;
                         self.position.y = @floor(item.rectangle.y - self.hitbox.height);
                         self.is_on_ground = true;
                         self.is_on_roof = false;
                         hit_obstacle = true;
+                        break :blk;
                     }
                 },
 
