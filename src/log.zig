@@ -8,7 +8,7 @@ pub fn debug(comptime text: [:0]const u8, args: anytype) void {
     var threaded = std.Io.Threaded.init_single_threaded;
     const io = threaded.io();
     const timestamp = std.Io.Clock.real.now(io);
-    std.debug.print("{any}  ", .{timestamp});
+    _ = timestamp;
     rl.traceLog(rl.TraceLogLevel.debug, constants.ENGINE_LOG_PREFIX ++ text, args);
 }
 

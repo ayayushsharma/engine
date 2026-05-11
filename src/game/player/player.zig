@@ -61,31 +61,34 @@ pub const Player = struct {
         self.can_jump = self.is_on_ground and !self.is_on_roof;
     }
 
-    pub fn updatePlayer(self: *Player, envItems: *std.ArrayList(RectItem), delta: f32) void {
-        assert(delta >= 0);
-
-        const prev_pos = self.position;
-
+    fn registerHorizontalInput(self: *Player, delta: f32) void {
         if (rl.isKeyDown(rl.KeyboardKey.a) or rl.isKeyDown(rl.KeyboardKey.left)) {
             self.position.x -= HORIZONTAL_SPEED * delta;
         }
         if (rl.isKeyDown(rl.KeyboardKey.d) or rl.isKeyDown(rl.KeyboardKey.right)) {
             self.position.x += HORIZONTAL_SPEED * delta;
         }
+    }
 
+    fn registerVerticalInput(self: *Player, delta: f32) void {
         if (rl.isKeyDown(rl.KeyboardKey.space) and self.can_jump) {
             self.vertical_speed = -JUMP_SPEED;
             self.is_on_ground = false;
         }
-
         if (rl.isKeyDown(rl.KeyboardKey.s) or rl.isKeyDown(rl.KeyboardKey.down)) {
             self.vertical_speed = JUMP_SPEED;
         }
-
         self.position.y += (self.vertical_speed * delta);
+    }
+
+    fn handleVertical(self: *Player, envItems: *std.ArrayList(RectItem), delta: f32) void {
+        const prev_pos = self.position;
+
+        self.registerVerticalInput(delta);
+
+        self.updateHitBox();
 
         const direction = data.math.direction.init(prev_pos, self.position);
-        self.updateHitBox();
 
         var hit_obstacle = false;
         for (envItems.items) |*item| {
@@ -100,16 +103,14 @@ pub const Player = struct {
             switch (item.is_blocking) {
                 .Blocking => {
                     if (direction.isUp()) {
-                        log.debug("Is Up", .{});
                         self.vertical_speed = 0;
-                        self.position.y = item.rectangle.y + item.rectangle.height;
+                        self.position.y = @ceil(item.rectangle.y + item.rectangle.height);
                         self.is_on_roof = true;
                     }
 
                     if (direction.isDown()) {
-                        log.debug("Is Down", .{});
                         self.vertical_speed = 0;
-                        self.position.y = item.rectangle.y - self.hitbox.height;
+                        self.position.y = @ceil(item.rectangle.y - self.hitbox.height);
                         self.is_on_ground = true;
                         self.is_on_roof = false;
                     }
@@ -117,14 +118,12 @@ pub const Player = struct {
 
                 .TopBlocking => {
                     if (direction.isUp()) {
-                        log.debug("Is Up", .{});
                         hit_obstacle = false;
                     }
 
                     if (direction.isDown()) {
-                        log.debug("Is Down", .{});
                         self.vertical_speed = 0;
-                        self.position.y = item.rectangle.y - self.hitbox.height;
+                        self.position.y = @ceil(item.rectangle.y - self.hitbox.height);
                         self.is_on_ground = true;
                         self.is_on_roof = false;
                     }
@@ -140,17 +139,61 @@ pub const Player = struct {
             self.updateCanJump();
         }
 
-        // if (item.is_blocking == .Blocking and
-        //     item.rectangle.x <= self.position.x and
-        //     item.rectangle.x + item.rectangle.width >= self.position.x and
-        //     item.rectangle.y >= self.position.y and
-        //     item.rectangle.y <= self.position.y + self.vertical_speed * delta)
-        // {
-        //     hitObstacle = true;
-        //     self.vertical_speed = 0;
-        //     self.position.y = item.rectangle.y;
-        //     break;
-        // }
+        self.updateHitBox();
+    }
+
+    fn handleHorizontal(self: *Player, envItems: *std.ArrayList(RectItem), delta: f32) void {
+        const prev_pos = self.position;
+
+        self.registerHorizontalInput(delta);
+        self.updateHitBox();
+
+        const direction = data.math.direction.init(prev_pos, self.position);
+
+        for (envItems.items) |*item| {
+            const is_collision = rl.checkCollisionRecs(item.rectangle, self.hitbox);
+
+            if (!is_collision) {
+                continue;
+            }
+
+            switch (item.is_blocking) {
+                .Blocking => {
+                    if (direction.isLeft()) {
+                        self.position.x = @ceil(item.rectangle.x + item.rectangle.width);
+                    }
+
+                    if (direction.isRight()) {
+                        self.position.x = @ceil(item.rectangle.x - self.hitbox.width);
+                    }
+                },
+                .TopBlocking => {},
+                else => {},
+            }
+        }
+
+    }
+
+    pub fn updatePlayer(self: *Player, envItems: *std.ArrayList(RectItem), delta: f32) void {
+        assert(delta >= 0);
+
+        self.handleVertical(envItems, delta);
+
+        if (self.is_on_ground) {
+            self.position.y -= 1;
+        }
+        if (self.is_on_roof) {
+            self.position.y += 1;
+        }
+
+        self.handleHorizontal(envItems, delta);
+
+        if (self.is_on_ground) {
+            self.position.y += 1;
+        }
+        if (self.is_on_roof) {
+            self.position.y -= 1;
+        }
 
         self.updateHitBox();
     }

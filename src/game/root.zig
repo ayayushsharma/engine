@@ -37,7 +37,7 @@ pub fn run_game() !void {
 
     var game_obj = try game.Game.init(allocator, &player_obj, &camera_obj, &grids);
     engine.init(.{
-        .fps = 60,
+        .fps = 0,
         .height = screen_height,
         .width = screen_width,
         .title = "Engine",
