@@ -72,8 +72,6 @@ pub fn getGroundItems(
     assert(layer_height > 0);
     assert(layer_width > 0);
 
-    std.debug.print("Layer Size: {d} {d}\n", .{ layer_height, layer_width });
-
     const GroundGridBlock = world.defs.GroundGridBlock;
 
     const matrix = try allocator.alloc([]i32, layer_height);

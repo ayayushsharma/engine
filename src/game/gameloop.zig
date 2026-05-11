@@ -24,8 +24,14 @@ pub const Game = struct {
         allocator: std.mem.Allocator,
         player_obj: *player.Player,
         camera_obj: *engine.Camera,
-        environment: *level.GridBlocks,
     ) !Game {
+        const level_data_path = "resources/levels/levels.ldtk";
+        const level_id = "Level_0";
+        const level_data = try data.ldtk.loadLevel(allocator, level_data_path);
+        defer level_data.deinit();
+        var grids = try level.getGroundItems(allocator, level_data_path, level_id);
+        var environment = &grids;
+
         const RectangleItem = engine.cm.models.RectangleItem;
         var flat_environment = std.ArrayList(RectangleItem).empty;
 

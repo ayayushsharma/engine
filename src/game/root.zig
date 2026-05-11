@@ -6,6 +6,7 @@ const level = @import("level/level.zig");
 const engine = @import("engine");
 const game = @import("gameloop.zig");
 const ncast = data.cast.ncast;
+const log = @import("log");
 
 test {
     std.testing.refAllDecls(@This());
@@ -16,15 +17,8 @@ pub fn run_game() !void {
     defer arena.deinit();
     const allocator = arena.allocator();
 
-    const level_data_path = "resources/levels/levels.ldtk";
-    const level_id = "Level_0";
-    const level_data = try data.ldtk.loadLevel(allocator, level_data_path);
-    defer level_data.deinit();
-
     const screen_width = 1200;
     const screen_height = 700;
-
-    var grids = try level.getGroundItems(allocator, level_data_path, level_id);
 
     var player_obj: player.Player = .init(rl.Vector2{ .x = 400, .y = 280 }, null, null);
     player_obj.can_jump = false;
@@ -35,7 +29,6 @@ pub fn run_game() !void {
         2,
     );
 
-    var game_obj = try game.Game.init(allocator, &player_obj, &camera_obj, &grids);
     engine.init(.{
         .fps = 0,
         .height = screen_height,
@@ -44,6 +37,8 @@ pub fn run_game() !void {
         .log_level = .debug,
     });
     defer engine.deinit();
+
+    var game_obj = try game.Game.init(allocator, &player_obj, &camera_obj);
 
     while (!engine.windowShouldClose()) {
         engine.beginFrame(rl.Color.ray_white);
