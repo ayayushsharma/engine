@@ -17,6 +17,11 @@ pub const HORIZONTAL_SPEED = 200.0;
 pub const DEFAULT_HITBOX_HEIGHT = 10.0;
 pub const DEFAULT_HITBOX_WIDTH = 10.0;
 
+const offset_action_type = enum {
+    create,
+    reset,
+};
+
 pub const Player = struct {
     position: rl.Vector2,
     hitbox: rl.Rectangle,
@@ -48,16 +53,16 @@ pub const Player = struct {
         };
     }
 
-    fn updateHitBox(self: *Player) void {
+    inline fn updateHitBox(self: *Player) void {
         self.hitbox.x = self.position.x;
         self.hitbox.y = self.position.y;
     }
 
-    fn addGravityEffect(self: *Player, delta: f32) void {
+    inline fn addGravityEffect(self: *Player, delta: f32) void {
         self.vertical_speed += ncast(f32, world.constants.GRAVITY) * delta;
     }
 
-    fn updateCanJump(self: *Player) void {
+    inline fn updateCanJump(self: *Player) void {
         self.can_jump = self.is_on_ground and !self.is_on_roof;
     }
 
@@ -134,11 +139,9 @@ pub const Player = struct {
 
         if (!hit_obstacle) {
             self.addGravityEffect(delta);
-            self.updateCanJump();
-        } else {
-            self.updateCanJump();
         }
 
+        self.updateCanJump();
         self.updateHitBox();
     }
 
@@ -171,7 +174,27 @@ pub const Player = struct {
                 else => {},
             }
         }
+    }
 
+    inline fn manageVerticalOffsets(self: *Player, comptime action: offset_action_type) void {
+        switch (action) {
+            .create => {
+                if (self.is_on_ground) {
+                    self.position.y -= 1;
+                }
+                if (self.is_on_roof) {
+                    self.position.y += 1;
+                }
+            },
+            .reset => {
+                if (self.is_on_ground) {
+                    self.position.y += 1;
+                }
+                if (self.is_on_roof) {
+                    self.position.y -= 1;
+                }
+            },
+        }
     }
 
     pub fn updatePlayer(self: *Player, envItems: *std.ArrayList(RectItem), delta: f32) void {
@@ -179,21 +202,9 @@ pub const Player = struct {
 
         self.handleVertical(envItems, delta);
 
-        if (self.is_on_ground) {
-            self.position.y -= 1;
-        }
-        if (self.is_on_roof) {
-            self.position.y += 1;
-        }
-
+        self.manageVerticalOffsets(.create);
         self.handleHorizontal(envItems, delta);
-
-        if (self.is_on_ground) {
-            self.position.y += 1;
-        }
-        if (self.is_on_roof) {
-            self.position.y -= 1;
-        }
+        self.manageVerticalOffsets(.reset);
 
         self.updateHitBox();
     }

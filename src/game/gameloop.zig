@@ -64,7 +64,6 @@ pub const Game = struct {
         }
 
         rl.drawRectangleRec(self.player.hitbox, rl.Color.red);
-        rl.drawCircleV(self.player.position, 5, rl.Color.gold);
 
         self.camera.end();
 
