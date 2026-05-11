@@ -17,8 +17,8 @@ pub fn run_game() !void {
     defer arena.deinit();
     const allocator = arena.allocator();
 
-    const screen_width = 1200;
-    const screen_height = 700;
+    const screen_width = 1600;
+    const screen_height = 900;
 
     var player_obj: player.Player = .init(rl.Vector2{ .x = 400, .y = 280 }, null, null);
 

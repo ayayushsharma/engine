@@ -67,7 +67,7 @@ pub const Game = struct {
             rl.drawRectangleRec(items.rectangle, items.color);
         }
 
-        rl.drawRectangleRec(self.player.hitbox, rl.Color.red);
+        rl.drawRectangleLinesEx(self.player.hitbox, 1.0, rl.Color.red);
 
         self.camera.end();
 

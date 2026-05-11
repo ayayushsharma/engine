@@ -28,6 +28,7 @@ pub const Player = struct {
     vertical_speed: f32 = 0,
     is_on_ground: bool = false,
     is_on_wall: bool = false,
+    wall_side: ?engine.physics.direction.horizontal = null,
     is_on_roof: bool = false,
     can_jump: bool = false,
 
@@ -60,6 +61,7 @@ pub const Player = struct {
 
     inline fn addGravityEffect(self: *Player, delta: f32) void {
         self.vertical_speed += ncast(f32, world.constants.GRAVITY) * delta;
+        self.vertical_speed = @min(self.vertical_speed, JUMP_SPEED * 3);
     }
 
     inline fn updateCanJump(self: *Player) void {
@@ -86,6 +88,13 @@ pub const Player = struct {
         self.position.y += (self.vertical_speed * delta);
     }
 
+    fn updateAirStats(self: *Player) void {
+        self.is_on_ground = false;
+        self.is_on_roof = false;
+        self.is_on_wall = false;
+        self.can_jump = false;
+    }
+
     fn handleVertical(self: *Player, envItems: *std.ArrayList(RectItem), delta: f32) void {
         const prev_pos = self.position;
 
@@ -103,34 +112,39 @@ pub const Player = struct {
                 continue;
             }
 
-            hit_obstacle = true;
-
             switch (item.is_blocking) {
                 .Blocking => {
                     if (direction.isUp()) {
                         self.vertical_speed = 0;
                         self.position.y = @ceil(item.rectangle.y + item.rectangle.height);
                         self.is_on_roof = true;
+                        self.is_on_ground = false;
+                        hit_obstacle = true;
                     }
 
-                    if (direction.isDown()) {
+                    if (direction.isDown() and
+                        item.rectangle.y > self.hitbox.y and
+                        item.rectangle.y < self.hitbox.y + self.hitbox.height) {
                         self.vertical_speed = 0;
-                        self.position.y = @ceil(item.rectangle.y - self.hitbox.height);
+                        self.position.y = @floor(item.rectangle.y - self.hitbox.height);
                         self.is_on_ground = true;
                         self.is_on_roof = false;
+                        hit_obstacle = true;
                     }
                 },
 
                 .TopBlocking => {
-                    if (direction.isUp()) {
-                        hit_obstacle = false;
-                    }
+                    if (direction.isUp()) {}
 
-                    if (direction.isDown()) {
+                    if (direction.isDown() and
+                        item.rectangle.y > self.hitbox.y and
+                        item.rectangle.y < self.hitbox.y + self.hitbox.height)
+                    {
                         self.vertical_speed = 0;
-                        self.position.y = @ceil(item.rectangle.y - self.hitbox.height);
+                        self.position.y = @floor(item.rectangle.y - self.hitbox.height);
                         self.is_on_ground = true;
                         self.is_on_roof = false;
+                        hit_obstacle = true;
                     }
                 },
                 else => {},
@@ -139,6 +153,7 @@ pub const Player = struct {
 
         if (!hit_obstacle) {
             self.addGravityEffect(delta);
+            self.updateAirStats();
         }
 
         self.updateCanJump();
