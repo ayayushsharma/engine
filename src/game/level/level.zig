@@ -4,6 +4,8 @@ const rl = @import("raylib");
 const std = @import("std");
 const mem = std.mem;
 const engine = @import("engine");
+const log = @import("log");
+
 const assert = std.debug.assert;
 const cast = data.cast.ncast;
 

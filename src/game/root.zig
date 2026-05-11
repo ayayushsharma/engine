@@ -21,7 +21,6 @@ pub fn run_game() !void {
     const screen_height = 700;
 
     var player_obj: player.Player = .init(rl.Vector2{ .x = 400, .y = 280 }, null, null);
-    player_obj.can_jump = false;
 
     var camera_obj: engine.Camera = .init(
         rl.Vector2.init(ncast(f32, screen_width / 2), ncast(f32, screen_height / 2)),

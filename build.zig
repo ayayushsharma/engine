@@ -28,6 +28,7 @@ pub fn build(b: *std.Build) !void {
 
     const engine_mod = b.createModule(.{ .root_source_file = b.path("src/engine/root.zig") });
     engine_mod.addImport("raylib", raylib);
+    engine_mod.addImport("log", log_mod);
 
     exe_mod.addImport("raylib", raylib);
     exe_mod.addImport("data", data_mod);
@@ -50,12 +51,17 @@ pub fn build(b: *std.Build) !void {
         var emcc_flags = emsdk.emccDefaultFlags(b.allocator, .{ .optimize = optimize });
         try emcc_flags.put("-gsource-map", {});
         try emcc_flags.put("-g", {});
+        try emcc_flags.put("-fsanitize-trap=undefined", {});
+
 
         var emcc_settings = emsdk.emccDefaultSettings(b.allocator, .{ .optimize = optimize });
         try emcc_settings.put("ASSERTIONS", "2");
         try emcc_settings.put("STACK_OVERFLOW_CHECK", "1");
         try emcc_settings.put("ALLOW_MEMORY_GROWTH", "1");
         try emcc_settings.put("EXIT_RUNTIME", "1");
+        try emcc_settings.put("INITIAL_MEMORY", "268435456");  // 256MB
+        try emcc_settings.put("MAXIMUM_MEMORY", "1073741824"); // 1GB
+        try emcc_settings.put("NO_FILESYSTEM", "0");
 
         const emcc_step = emsdk.emccStep(b, raylib_artifact, wasm, .{
             .optimize = optimize,

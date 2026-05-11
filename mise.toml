@@ -15,7 +15,7 @@ run = "zig build run -Doptimize=ReleaseFast"
 description = "Runs the Game"
 
 [tasks.web-build]
-run = "zig build -Dtarget=wasm32-emscripten"
+run = "mise exec zig@master -- zig build -Dtarget=wasm32-emscripten -Doptimize=ReleaseSmall"
 description = "Builds project for web"
 
 [tasks.debug-run-web]

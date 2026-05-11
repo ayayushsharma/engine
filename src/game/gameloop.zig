@@ -27,8 +27,6 @@ pub const Game = struct {
     ) !Game {
         const level_data_path = "resources/levels/levels.ldtk";
         const level_id = "Level_0";
-        const level_data = try data.ldtk.loadLevel(allocator, level_data_path);
-        defer level_data.deinit();
         var grids = try level.getGroundItems(allocator, level_data_path, level_id);
         var environment = &grids;
 

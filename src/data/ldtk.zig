@@ -5,6 +5,7 @@
 const rl = @import("raylib");
 const std = @import("std");
 const json = std.json;
+const log = @import("log");
 const Allocator = std.mem.Allocator;
 
 // ─────────────────────────────────────────────
@@ -747,6 +748,7 @@ pub fn parseLdtkJSON(allocator: Allocator, data: []const u8) !json.Parsed(LdtkJS
 }
 
 pub fn loadLevel(allocator: Allocator, path: []const u8) !json.Parsed(LdtkJSON) {
+    defer log.complete("Parsing Ldtk json");
     const buffer = try rl.loadFileData(path);
     return try parseLdtkJSON(allocator, buffer);
 }

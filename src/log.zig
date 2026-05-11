@@ -27,3 +27,7 @@ pub fn err(comptime text: [:0]const u8, args: anytype) void {
 pub fn fatal(comptime text: [:0]const u8, args: anytype) void {
     rl.traceLog(rl.TraceLogLevel.fatal, constants.ENGINE_LOG_PREFIX ++ text, args);
 }
+
+pub fn complete(comptime text: [:0]const u8) void {
+    debug(text ++ " - complete", .{});
+}
