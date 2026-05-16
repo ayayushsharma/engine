@@ -72,12 +72,20 @@ pub const Game = struct {
                 self.render_type = .only_hitbox;
             }
         }
-   
-        if (self.render_type == .only_hitbox) {
-            for (self.flat_environment.items) |items| {
-                rl.drawRectangleRec(items.rectangle, items.color);
-            }
-            rl.drawRectangleLinesEx(self.player.hitbox, 1.0, rl.Color.red);
+
+        for (self.flat_environment.items) |items| {
+            rl.drawRectangleRec(items.rectangle, items.color);
+        }
+        rl.drawRectangleLinesEx(self.player.hitbox, 1.0, rl.Color.red);
+
+        if (self.render_type == .all_assets) {
+            self.player.player_texture.texture.drawPro(
+                rl.Rectangle.init(0, 0, @as(f32, @floatFromInt(self.player.player_texture.texture.width)), @as(f32, @floatFromInt(self.player.player_texture.texture.height))),
+                self.player.hitbox,
+                .init(0, 0),
+                0,
+                rl.Color.white,
+            );
         }
 
         self.camera.end();

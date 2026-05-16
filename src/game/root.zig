@@ -20,14 +20,6 @@ pub fn run_game() !void {
     const screen_width = 1600;
     const screen_height = 900;
 
-    var player_obj: player.Player = .init(rl.Vector2{ .x = 400, .y = 280 }, null, null);
-
-    var camera_obj: engine.Camera = .init(
-        rl.Vector2.init(ncast(f32, screen_width / 2), ncast(f32, screen_height / 2)),
-        player_obj.position,
-        2,
-    );
-
     engine.init(.{
         .fps = 0,
         .height = screen_height,
@@ -36,6 +28,14 @@ pub fn run_game() !void {
         .log_level = .debug,
     });
     defer engine.deinit();
+
+    var player_obj: player.Player = .init(rl.Vector2{ .x = 400, .y = 280 }, null, null);
+
+    var camera_obj: engine.Camera = .init(
+        rl.Vector2.init(ncast(f32, screen_width / 2), ncast(f32, screen_height / 2)),
+        player_obj.position,
+        2,
+    );
 
     var game_obj = try game.Game.init(allocator, &player_obj, &camera_obj);
 

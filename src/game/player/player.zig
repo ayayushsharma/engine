@@ -14,8 +14,8 @@ const CoordinateAxis = engine.cm.models.CoordinateAxis;
 pub const JUMP_SPEED = 450.0;
 pub const HORIZONTAL_SPEED = 200.0;
 
-pub const DEFAULT_HITBOX_HEIGHT = 10.0;
-pub const DEFAULT_HITBOX_WIDTH = 10.0;
+pub const DEFAULT_HITBOX_HEIGHT = 50.0;
+pub const DEFAULT_HITBOX_WIDTH = 50.0;
 
 const offset_action_type = enum {
     create,
@@ -31,10 +31,15 @@ pub const Player = struct {
     wall_side: ?engine.physics.direction.horizontal = null,
     is_on_roof: bool = false,
     can_jump: bool = false,
+    player_texture: engine.renderer.texture.Texture,
 
     pub fn init(position: rl.Vector2, hitbox_height: ?f32, hitbox_width: ?f32) Player {
         const height = hitbox_height orelse DEFAULT_HITBOX_HEIGHT;
         const width = hitbox_width orelse DEFAULT_HITBOX_WIDTH;
+
+        // const image_path = "resources/assets/original/BlueWizard/2BlueWizardIdle/Chara - BlueIdle00000.png";
+        const image_path = "resources/assets/128x128/BlueWizard/2BlueWizardIdle/Chara - BlueIdle00000.png";
+        const texture = engine.renderer.texture.Texture.init(image_path) catch unreachable;
 
         return Player{
             .position = position,
@@ -44,6 +49,7 @@ pub const Player = struct {
                 width,
                 height,
             ),
+            .player_texture = texture,
         };
     }
 
@@ -124,10 +130,8 @@ pub const Player = struct {
                     }
 
                     // item's top must be between player hitbox
-                    const item_top_between_hithox: bool = (
-                        item.rectangle.y > self.hitbox.y and
-                        item.rectangle.y < self.hitbox.y + self.hitbox.height
-                    );
+                    const item_top_between_hithox: bool = (item.rectangle.y > self.hitbox.y and
+                        item.rectangle.y < self.hitbox.y + self.hitbox.height);
 
                     if (direction.isDown() and item_top_between_hithox) {
                         self.vertical_speed = 0;
@@ -228,5 +232,9 @@ pub const Player = struct {
         self.manageVerticalOffsets(.reset);
 
         self.updateHitBox();
+    }
+
+    pub fn drawTexture(self: *Player) void {
+        self.player_texture.draw(self.position, rl.Color.white);
     }
 };

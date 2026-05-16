@@ -3,3 +3,5 @@ pub const render_type = enum {
     only_hitbox,
     player_assets,
 };
+
+pub const texture = @import("texture.zig");
