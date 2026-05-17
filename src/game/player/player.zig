@@ -14,8 +14,8 @@ const CoordinateAxis = engine.cm.models.CoordinateAxis;
 pub const JUMP_SPEED = 450.0;
 pub const HORIZONTAL_SPEED = 200.0;
 
-pub const DEFAULT_HITBOX_HEIGHT = 50.0;
-pub const DEFAULT_HITBOX_WIDTH = 50.0;
+pub const DEFAULT_HITBOX_HEIGHT = 36.0;
+pub const DEFAULT_HITBOX_WIDTH = 24.0;
 
 const offset_action_type = enum {
     create,
@@ -103,6 +103,7 @@ pub const Player = struct {
 
     fn handleVertical(self: *Player, envItems: *std.ArrayList(RectItem), delta: f32) void {
         const prev_pos = self.position;
+        const prev_hitbox = self.hitbox;
 
         self.registerVerticalInput(delta);
 
@@ -148,7 +149,8 @@ pub const Player = struct {
 
                     if (direction.isDown() and
                         item.rectangle.y > self.hitbox.y and
-                        item.rectangle.y < self.hitbox.y + self.hitbox.height)
+                        item.rectangle.y < self.hitbox.y + self.hitbox.height and
+                        !rl.checkCollisionRecs(prev_hitbox, item.rectangle))
                     {
                         self.vertical_speed = 0;
                         self.position.y = @floor(item.rectangle.y - self.hitbox.height);
