@@ -77,15 +77,10 @@ pub const Game = struct {
             rl.drawRectangleRec(items.rectangle, items.color);
         }
         rl.drawRectangleLinesEx(self.player.hitbox, 1.0, rl.Color.red);
+        rl.drawRectangleLinesEx(self.player.sprite_box, 1.0, rl.Color.pink);
 
         if (self.render_type == .all_assets) {
-            self.player.player_texture.texture.drawPro(
-                rl.Rectangle.init(0, 0, @as(f32, @floatFromInt(self.player.player_texture.texture.width)), @as(f32, @floatFromInt(self.player.player_texture.texture.height))),
-                self.player.hitbox,
-                .init(0, 0),
-                0,
-                rl.Color.white,
-            );
+            self.player.drawTexture(delta_time);
         }
 
         self.camera.end();

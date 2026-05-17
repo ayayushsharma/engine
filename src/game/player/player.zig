@@ -11,11 +11,12 @@ const log = @import("log");
 const RectItem = engine.cm.models.RectangleItem;
 const CoordinateAxis = engine.cm.models.CoordinateAxis;
 
-pub const JUMP_SPEED = 450.0;
-pub const HORIZONTAL_SPEED = 200.0;
+pub const JUMP_SPEED = world.constants.BASE_RENDER_BLOCK_SIZE * 20;
+pub const HORIZONTAL_SPEED = world.constants.BASE_RENDER_BLOCK_SIZE * 10;
+pub const GRAVITY = world.constants.DEFAULT_GRAVITY * 2;
 
-pub const DEFAULT_HITBOX_HEIGHT = 36.0;
-pub const DEFAULT_HITBOX_WIDTH = 24.0;
+pub const DEFAULT_HITBOX_HEIGHT = ncast(i32, ncast(f32, world.constants.BASE_RENDER_BLOCK_SIZE) * 5.0 / 3.0);
+pub const DEFAULT_HITBOX_WIDTH = ncast(i32, ncast(f32, world.constants.BASE_RENDER_BLOCK_SIZE) * 4.0 / 3.0);
 
 const offset_action_type = enum {
     create,
@@ -25,20 +26,26 @@ const offset_action_type = enum {
 pub const Player = struct {
     position: rl.Vector2,
     hitbox: rl.Rectangle,
+    sprite_box: rl.Rectangle,
     vertical_speed: f32 = 0,
     is_on_ground: bool = false,
     is_on_wall: bool = false,
-    wall_side: ?engine.physics.direction.horizontal = null,
+    wall_side: engine.physics.direction.horizontal = .none,
     is_on_roof: bool = false,
     can_jump: bool = false,
     player_texture: engine.renderer.texture.Texture,
+    sprite_frame: i32 = 0,
+    since_sprite_frame_time: f32 = 0,
+
+    /// this is in milliseconds
+    individual_frame_duration: f32 = 0.200,
 
     pub fn init(position: rl.Vector2, hitbox_height: ?f32, hitbox_width: ?f32) Player {
         const height = hitbox_height orelse DEFAULT_HITBOX_HEIGHT;
         const width = hitbox_width orelse DEFAULT_HITBOX_WIDTH;
 
         // const image_path = "resources/assets/original/BlueWizard/2BlueWizardIdle/Chara - BlueIdle00000.png";
-        const image_path = "resources/assets/128x128/BlueWizard/2BlueWizardIdle/Chara - BlueIdle00000.png";
+        const image_path = "resources/assets/Character/Idle/Idle-Sheet.png";
         const texture = engine.renderer.texture.Texture.init(image_path) catch unreachable;
 
         return Player{
@@ -47,6 +54,12 @@ pub const Player = struct {
                 position.x,
                 position.y,
                 width,
+                height,
+            ),
+            .sprite_box = rl.Rectangle.init(
+                position.x - 2,
+                position.y,
+                width + 4,
                 height,
             ),
             .player_texture = texture,
@@ -65,8 +78,13 @@ pub const Player = struct {
         self.hitbox.y = self.position.y;
     }
 
+    inline fn updateSpriteBox(self: *Player) void {
+        self.sprite_box.x = self.position.x - 2;
+        self.sprite_box.y = self.position.y;
+    }
+
     inline fn addGravityEffect(self: *Player, delta: f32) void {
-        self.vertical_speed += ncast(f32, world.constants.GRAVITY) * delta;
+        self.vertical_speed += ncast(f32, GRAVITY) * delta;
         self.vertical_speed = @min(self.vertical_speed, JUMP_SPEED * 3);
     }
 
@@ -234,9 +252,29 @@ pub const Player = struct {
         self.manageVerticalOffsets(.reset);
 
         self.updateHitBox();
+        self.updateSpriteBox();
     }
 
-    pub fn drawTexture(self: *Player) void {
-        self.player_texture.draw(self.position, rl.Color.white);
+    pub fn drawTexture(self: *Player, delta: f32) void {
+        self.player_texture.texture.drawPro(
+            rl.Rectangle.init(
+                // 0,
+                @as(f32, @floatFromInt(self.player_texture.texture.width)) / 4 * ncast(f32, self.sprite_frame),
+                0,
+                @as(f32, @floatFromInt(self.player_texture.texture.width)) / 4,
+                @as(f32, @floatFromInt(self.player_texture.texture.height)),
+            ),
+            self.sprite_box,
+            .init(0, 0),
+            0,
+            rl.Color.white,
+        );
+
+        self.since_sprite_frame_time += delta;
+        if (self.since_sprite_frame_time > self.individual_frame_duration) {
+            self.sprite_frame += 1;
+            self.sprite_frame = @rem(self.sprite_frame, 4);
+            self.since_sprite_frame_time = 0;
+        }
     }
 };

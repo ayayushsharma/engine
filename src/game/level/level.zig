@@ -103,7 +103,7 @@ pub fn getGroundItems(
         gop.value_ptr.* = std.ArrayList(engine.cm.models.RectangleItem).empty;
     }
 
-    const BASE_BLOCK_SIZE: f32 = world.constants.BASE_BLOCK_SIZE;
+    const BASE_RENDER_BLOCK_SIZE: f32 = world.constants.BASE_RENDER_BLOCK_SIZE;
 
     for (0..layer_width) |col| {
         var continous_blocks: i32 = 1;
@@ -126,10 +126,10 @@ pub fn getGroundItems(
 
                 try gop.value_ptr.append(allocator, .{
                     .rectangle = .{
-                        .x = BASE_BLOCK_SIZE * cast(f32, col),
-                        .y = BASE_BLOCK_SIZE * (cast(f32, row) - cast(f32, 1 + continous_blocks)),
-                        .height = cast(f32, continous_blocks) * BASE_BLOCK_SIZE,
-                        .width = BASE_BLOCK_SIZE,
+                        .x = BASE_RENDER_BLOCK_SIZE * cast(f32, col),
+                        .y = BASE_RENDER_BLOCK_SIZE * (cast(f32, row) - cast(f32, 1 + continous_blocks)),
+                        .height = cast(f32, continous_blocks) * BASE_RENDER_BLOCK_SIZE,
+                        .width = BASE_RENDER_BLOCK_SIZE,
                     },
                     .color = getBlockColor(prev_block_type),
                     .is_blocking = getCollisionType(prev_block_type),
@@ -148,10 +148,10 @@ pub fn getGroundItems(
 
                 try gop.value_ptr.append(allocator, .{
                     .rectangle = .{
-                        .x = BASE_BLOCK_SIZE * cast(f32, col),
-                        .y = BASE_BLOCK_SIZE * (cast(f32, row) - cast(f32, 1 + continous_blocks)),
-                        .height = cast(f32, continous_blocks) * BASE_BLOCK_SIZE,
-                        .width = BASE_BLOCK_SIZE,
+                        .x = BASE_RENDER_BLOCK_SIZE * cast(f32, col),
+                        .y = BASE_RENDER_BLOCK_SIZE * (cast(f32, row) - cast(f32, 1 + continous_blocks)),
+                        .height = cast(f32, continous_blocks) * BASE_RENDER_BLOCK_SIZE,
+                        .width = BASE_RENDER_BLOCK_SIZE,
                     },
                     .color = getBlockColor(current_block_type),
                     .is_blocking = getCollisionType(current_block_type),
