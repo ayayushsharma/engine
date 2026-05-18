@@ -29,6 +29,7 @@ pub fn build(b: *std.Build) !void {
     const engine_mod = b.createModule(.{ .root_source_file = b.path("src/engine/root.zig") });
     engine_mod.addImport("raylib", raylib);
     engine_mod.addImport("log", log_mod);
+    engine_mod.addImport("data", data_mod);
 
     exe_mod.addImport("raylib", raylib);
     exe_mod.addImport("data", data_mod);

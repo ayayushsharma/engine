@@ -15,8 +15,12 @@ pub const JUMP_SPEED = world.constants.BASE_RENDER_BLOCK_SIZE * 20;
 pub const HORIZONTAL_SPEED = world.constants.BASE_RENDER_BLOCK_SIZE * 10;
 pub const GRAVITY = world.constants.DEFAULT_GRAVITY * 2;
 
-pub const DEFAULT_HITBOX_HEIGHT = ncast(i32, ncast(f32, world.constants.BASE_RENDER_BLOCK_SIZE) * 5.0 / 3.0);
-pub const DEFAULT_HITBOX_WIDTH = ncast(i32, ncast(f32, world.constants.BASE_RENDER_BLOCK_SIZE) * 4.0 / 3.0);
+pub const PLAYER_BLOCK_SIZE = ncast(f32, world.constants.BASE_RENDER_BLOCK_SIZE) / 3;
+pub const HITBOX_HEIGHT = ncast(i32, PLAYER_BLOCK_SIZE * 3.0);
+pub const HITBOX_WIDTH = ncast(i32, PLAYER_BLOCK_SIZE * 1.0);
+
+pub const SPRITE_HEIGHT = ncast(i32, PLAYER_BLOCK_SIZE * 5.0);
+pub const SPRITE_WIDTH = ncast(i32, PLAYER_BLOCK_SIZE * 5.0);
 
 const offset_action_type = enum {
     create,
@@ -34,19 +38,22 @@ pub const Player = struct {
     is_on_roof: bool = false,
     can_jump: bool = false,
     player_texture: engine.renderer.texture.Texture,
+
+    facing_direction: engine.physics.direction.horizontal = .none,
+
     sprite_frame: i32 = 0,
     since_sprite_frame_time: f32 = 0,
 
     /// this is in milliseconds
-    individual_frame_duration: f32 = 0.200,
+    individual_frame_duration: f32 = 0.100,
 
     pub fn init(position: rl.Vector2, hitbox_height: ?f32, hitbox_width: ?f32) Player {
-        const height = hitbox_height orelse DEFAULT_HITBOX_HEIGHT;
-        const width = hitbox_width orelse DEFAULT_HITBOX_WIDTH;
+        const height = hitbox_height orelse HITBOX_HEIGHT;
+        const width = hitbox_width orelse HITBOX_WIDTH;
 
         // const image_path = "resources/assets/original/BlueWizard/2BlueWizardIdle/Chara - BlueIdle00000.png";
-        const image_path = "resources/assets/Character/Idle/Idle-Sheet.png";
-        const texture = engine.renderer.texture.Texture.init(image_path) catch unreachable;
+        const image_path = "resources/assets/Character/Run/Run-Sheet.png";
+        const texture = engine.renderer.texture.Texture.init(image_path, 8, .{ .width = SPRITE_WIDTH, .height = SPRITE_HEIGHT }) catch unreachable;
 
         return Player{
             .position = position,
@@ -57,10 +64,10 @@ pub const Player = struct {
                 height,
             ),
             .sprite_box = rl.Rectangle.init(
-                position.x - 2,
+                position.x,
                 position.y,
-                width + 4,
-                height,
+                SPRITE_WIDTH,
+                SPRITE_HEIGHT,
             ),
             .player_texture = texture,
         };
@@ -79,8 +86,8 @@ pub const Player = struct {
     }
 
     inline fn updateSpriteBox(self: *Player) void {
-        self.sprite_box.x = self.position.x - 2;
-        self.sprite_box.y = self.position.y;
+        self.sprite_box.x = self.getHitBoxCenter().x - SPRITE_WIDTH / 2;
+        self.sprite_box.y = self.getHitBoxCenter().y - SPRITE_HEIGHT / 2;
     }
 
     inline fn addGravityEffect(self: *Player, delta: f32) void {
@@ -198,6 +205,12 @@ pub const Player = struct {
 
         const direction = data.math.direction.init(prev_pos, self.position);
 
+        if (direction.isLeft()) {
+            self.facing_direction = .left;
+        } else if (direction.isRight()) {
+            self.facing_direction = .right;
+        }
+
         for (envItems.items) |*item| {
             const is_collision = rl.checkCollisionRecs(item.rectangle, self.hitbox);
 
@@ -256,19 +269,12 @@ pub const Player = struct {
     }
 
     pub fn drawTexture(self: *Player, delta: f32) void {
-        self.player_texture.texture.drawPro(
-            rl.Rectangle.init(
-                // 0,
-                @as(f32, @floatFromInt(self.player_texture.texture.width)) / 4 * ncast(f32, self.sprite_frame),
-                0,
-                @as(f32, @floatFromInt(self.player_texture.texture.width)) / 4,
-                @as(f32, @floatFromInt(self.player_texture.texture.height)),
-            ),
-            self.sprite_box,
-            .init(0, 0),
-            0,
-            rl.Color.white,
-        );
+        const flipped = switch (self.facing_direction) {
+            .none => false,
+            .right => false,
+            .left => true,
+        };
+        self.player_texture.drawSprite(self.sprite_frame, self.sprite_box, .white, flipped);
 
         self.since_sprite_frame_time += delta;
         if (self.since_sprite_frame_time > self.individual_frame_duration) {
