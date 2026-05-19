@@ -370,7 +370,7 @@ pub const FieldDefinition = struct {
     autoChainRef: bool,
     canBeNull: bool,
     /// Default value when selected value is null or invalid
-    defaultOverride: ?json.Value = null,
+    defaultOverride: ?[]const u8 = null,
     doc: ?[]const u8 = null,
     editorAlwaysShow: bool,
     editorCutLongValues: bool,
@@ -516,10 +516,10 @@ pub const FieldInstance = struct {
     __identifier: []const u8,
     __tile: ?TilesetRectangle = null,
     __type: []const u8,
-    /// Actual value – type depends on __type. Use json.Value for dynamic dispatch.
-    __value: json.Value,
+    /// Actual value – type depends on __type. Use []const u8 for dynamic dispatch.
+    __value: []const u8,
     defUid: i32,
-    realEditorValues: []json.Value,
+    realEditorValues: [][]const u8,
 };
 
 pub const EntityInstance = struct {
@@ -612,7 +612,7 @@ pub const Level = struct {
 
 pub const LdtkTocInstanceData = struct {
     /// Field values with exportToToc enabled; typing depends on field value types
-    fields: json.Value,
+    fields: []const u8,
     heiPx: i32,
     iids: ReferenceToAnEntityInstance,
     widPx: i32,

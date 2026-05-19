@@ -1,3 +1,4 @@
+const builtin = @import("builtin");
 const std = @import("std");
 const rl = @import("raylib");
 const data = @import("data");
@@ -13,7 +14,7 @@ test {
 }
 
 pub fn run_game() !void {
-    var arena: std.heap.ArenaAllocator = .init(std.heap.page_allocator);
+    var arena: std.heap.ArenaAllocator = .init(std.heap.c_allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
 
