@@ -279,7 +279,7 @@ pub const Player = struct {
         self.since_sprite_frame_time += delta;
         if (self.since_sprite_frame_time > self.individual_frame_duration) {
             self.sprite_frame += 1;
-            self.sprite_frame = @rem(self.sprite_frame, 4);
+            self.sprite_frame = @rem(self.sprite_frame, 8);
             self.since_sprite_frame_time = 0;
         }
     }

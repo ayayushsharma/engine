@@ -25,7 +25,7 @@ pub fn run_game() !void {
         .height = screen_height,
         .width = screen_width,
         .title = "Engine",
-        .log_level = .debug,
+        .log_level = .all,
     });
     defer engine.deinit();
 

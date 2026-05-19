@@ -75,6 +75,7 @@ pub const Game = struct {
 
         for (self.flat_environment.items) |items| {
             rl.drawRectangleRec(items.rectangle, items.color);
+            // rl.drawRectangleLinesEx(items.rectangle, 1.0, items.color);
         }
         rl.drawRectangleLinesEx(self.player.hitbox, 1.0, rl.Color.red);
         rl.drawRectangleLinesEx(self.player.sprite_box, 1.0, rl.Color.pink);
