@@ -5,6 +5,9 @@ const world = @import("../world/root.zig");
 const assert = std.debug.assert;
 const data = @import("data");
 const ncast = data.cast.ncast;
+const animation = @import("../animation/root.zig");
+
+const PlayerAnimation = animation.PlayerAnimation;
 
 const log = @import("log");
 
@@ -39,13 +42,18 @@ pub const Player = struct {
     can_jump: bool = false,
     player_texture: engine.renderer.texture.Texture,
 
-    facing_direction: engine.physics.direction.horizontal = .none,
-
     sprite_frame: i32 = 0,
     since_sprite_frame_time: f32 = 0,
 
     /// this is in milliseconds
     individual_frame_duration: f32 = 0.100,
+
+    player_animation: PlayerAnimation,
+    player_state: PlayerAnimation.states = .on_ground,
+
+    facing_direction: engine.physics.direction.horizontal = .none,
+    movement_direction_horizontal: engine.physics.direction.horizontal = .none,
+    movement_direction_vertical: engine.physics.direction.vertical = .none,
 
     pub fn init(position: rl.Vector2, hitbox_height: ?f32, hitbox_width: ?f32) Player {
         const height = hitbox_height orelse HITBOX_HEIGHT;
@@ -55,6 +63,7 @@ pub const Player = struct {
         const image_path = "resources/assets/Character/Run/Run-Sheet.png";
         const texture = engine.renderer.texture.Texture.init(image_path, 8, .{ .width = SPRITE_WIDTH, .height = SPRITE_HEIGHT }) catch unreachable;
 
+        const player_animation = PlayerAnimation.init() catch unreachable;
         return Player{
             .position = position,
             .hitbox = rl.Rectangle.init(
@@ -70,6 +79,7 @@ pub const Player = struct {
                 SPRITE_HEIGHT,
             ),
             .player_texture = texture,
+            .player_animation = player_animation,
         };
     }
 
@@ -207,8 +217,12 @@ pub const Player = struct {
 
         if (direction.isLeft()) {
             self.facing_direction = .left;
+            self.movement_direction_horizontal = .left;
         } else if (direction.isRight()) {
             self.facing_direction = .right;
+            self.movement_direction_horizontal = .right;
+        } else {
+            self.movement_direction_horizontal = .none;
         }
 
         for (envItems.items) |*item| {
@@ -282,5 +296,19 @@ pub const Player = struct {
             self.sprite_frame = @rem(self.sprite_frame, 8);
             self.since_sprite_frame_time = 0;
         }
+    }
+
+    pub fn drawAnimation(self: *Player, delta: f32) void {
+        self.player_animation.drawAnimationFrame(
+            self.player_state,
+            .{
+                .vertical = self.movement_direction_vertical,
+                .horizontal = self.movement_direction_horizontal,
+            },
+            self.facing_direction,
+            self.getHitBoxCenter(),
+            2.0,
+            delta,
+        );
     }
 };

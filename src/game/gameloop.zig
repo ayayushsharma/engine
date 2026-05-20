@@ -82,6 +82,7 @@ pub const Game = struct {
 
         if (self.render_type == .all_assets) {
             self.player.drawTexture(delta_time);
+            self.player.drawAnimation(delta_time);
         }
 
         self.camera.end();
