@@ -21,6 +21,7 @@ pub fn run_game() !void {
     const screen_width = 1600;
     const screen_height = 900;
 
+    // TODO: handle collision system at low frame rates
     engine.init(.{
         .fps = 0,
         .height = screen_height,

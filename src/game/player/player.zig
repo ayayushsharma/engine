@@ -34,12 +34,15 @@ pub const Player = struct {
     position: rl.Vector2,
     hitbox: rl.Rectangle,
     sprite_box: rl.Rectangle,
+
     vertical_speed: f32 = 0,
+
     is_on_ground: bool = false,
     is_on_wall: bool = false,
     wall_side: engine.physics.direction.horizontal = .none,
     is_on_roof: bool = false,
     can_jump: bool = false,
+
     player_texture: engine.renderer.texture.Texture,
 
     sprite_frame: i32 = 0,
@@ -61,7 +64,7 @@ pub const Player = struct {
 
         // const image_path = "resources/assets/original/BlueWizard/2BlueWizardIdle/Chara - BlueIdle00000.png";
         const image_path = "resources/assets/Character/Run/Run-Sheet.png";
-        const texture = engine.renderer.texture.Texture.init(image_path, 8, .{ .width = SPRITE_WIDTH, .height = SPRITE_HEIGHT }) catch unreachable;
+        const texture = engine.renderer.texture.Texture.init(image_path, 8) catch unreachable;
 
         const player_animation = PlayerAnimation.init() catch unreachable;
         return Player{
@@ -129,7 +132,7 @@ pub const Player = struct {
         self.position.y += (self.vertical_speed * delta);
     }
 
-    fn updateAirStats(self: *Player) void {
+    fn resetAirStats(self: *Player) void {
         self.is_on_ground = false;
         self.is_on_roof = false;
         self.is_on_wall = false;
@@ -170,7 +173,7 @@ pub const Player = struct {
                         item.rectangle.y < self.hitbox.y + self.hitbox.height);
 
                     if (direction.isDown() and item_top_between_hithox) {
-                        self.vertical_speed = 0;
+                        self.vertical_speed = GRAVITY * delta;
                         self.position.y = @floor(item.rectangle.y - self.hitbox.height);
                         self.is_on_ground = true;
                         self.is_on_roof = false;
@@ -187,7 +190,7 @@ pub const Player = struct {
                         item.rectangle.y < self.hitbox.y + self.hitbox.height and
                         !rl.checkCollisionRecs(prev_hitbox, item.rectangle))
                     {
-                        self.vertical_speed = 0;
+                        self.vertical_speed = GRAVITY * delta;
                         self.position.y = @floor(item.rectangle.y - self.hitbox.height);
                         self.is_on_ground = true;
                         self.is_on_roof = false;
@@ -200,11 +203,20 @@ pub const Player = struct {
 
         if (!hit_obstacle) {
             self.addGravityEffect(delta);
-            self.updateAirStats();
+            self.resetAirStats();
         }
 
         self.updateCanJump();
         self.updateHitBox();
+
+        const overall_direction = data.math.direction.init(prev_pos, self.position);
+        if (overall_direction.isDown()) {
+            self.movement_direction_vertical = .down;
+        } else if (overall_direction.isUp()) {
+            self.movement_direction_vertical = .up;
+        } else {
+            self.movement_direction_vertical = .none;
+        }
     }
 
     fn handleHorizontal(self: *Player, envItems: *std.ArrayList(RectItem), delta: f32) void {
@@ -300,7 +312,13 @@ pub const Player = struct {
 
     pub fn drawAnimation(self: *Player, delta: f32) void {
         self.player_animation.drawAnimationFrame(
-            self.player_state,
+            .{
+                .is_on_ground = self.is_on_ground,
+                .is_on_wall = self.is_on_wall,
+                .wall_side = self.wall_side,
+                .is_on_roof = self.is_on_roof,
+                .can_jump = self.can_jump,
+            },
             .{
                 .vertical = self.movement_direction_vertical,
                 .horizontal = self.movement_direction_horizontal,

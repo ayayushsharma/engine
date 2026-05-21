@@ -5,6 +5,8 @@ const engine = @import("engine");
 const direction = engine.physics.direction;
 const Texture = engine.renderer.texture.Texture;
 
+const log = @import("log");
+
 pub const PlayerAnimation = struct {
     previous_state: detailed_animation_states = .idle,
     current_state: detailed_animation_states = .idle,
@@ -33,13 +35,13 @@ pub const PlayerAnimation = struct {
     pub fn init() !PlayerAnimation {
         var animation_textures: [255]Texture = undefined;
 
-        animation_textures[@intFromEnum(detailed_animation_states.idle)] = try Texture.init("resources/assets/Character/Idle/Idle-Sheet.png", 8, .{ .height = 0.0, .width = 0.0 });
+        animation_textures[@intFromEnum(detailed_animation_states.idle)] = try Texture.init("resources/assets/Character/Idle/Idle-Sheet.png", 4);
 
-        animation_textures[@intFromEnum(detailed_animation_states.jumping_start)] = try Texture.init("resources/assets/Character/Jump-Start/Jump-Start-Sheet.png", 4, .{ .height = 0.0, .width = 0.0 });
+        animation_textures[@intFromEnum(detailed_animation_states.jumping_start)] = try Texture.init("resources/assets/Character/Jump-Start/Jump-Start-Sheet.png", 4);
 
-        animation_textures[@intFromEnum(detailed_animation_states.jumping_end)] = try Texture.init("resources/assets/Character/Jump-End/Jump-End-Sheet.png", 3, .{ .height = 0.0, .width = 0.0 });
+        animation_textures[@intFromEnum(detailed_animation_states.jumping_end)] = try Texture.init("resources/assets/Character/Jump-End/Jump-End-Sheet.png", 3);
 
-        animation_textures[@intFromEnum(detailed_animation_states.running)] = try Texture.init("resources/assets/Character/Run/Run-Sheet.png", 8, .{ .height = 0.0, .width = 0.0 });
+        animation_textures[@intFromEnum(detailed_animation_states.running)] = try Texture.init("resources/assets/Character/Run/Run-Sheet.png", 8);
 
         return .{
             .animation_textures = animation_textures,
@@ -71,31 +73,39 @@ pub const PlayerAnimation = struct {
         };
     }
 
-    fn getDetailedAnimation(state: states, motion_direction: motion_directions) detailed_animation_states {
-        return switch (state) {
-            .on_ground => {
-                return switch (motion_direction.horizontal) {
-                    .left => .running,
-                    .right => .running,
-                    .none => .idle,
-                };
-            },
-            .in_air => {
-                return switch (motion_direction.vertical) {
-                    .up => .jumping_start,
-                    .down => .jumping_end,
-                    .none => .jumping_end,
-                };
-            },
-        };
+    fn getDetailedAnimation(
+        surface_state: surface_states,
+        motion_direction: motion_directions,
+    ) detailed_animation_states {
+        const in_air = !surface_state.is_on_roof and
+            !surface_state.is_on_wall and
+            !surface_state.is_on_ground;
+
+        if (surface_state.is_on_ground) {
+            return switch (motion_direction.horizontal) {
+                .left => .running,
+                .right => .running,
+                .none => .idle,
+            };
+        }
+
+        if (in_air) {
+            return switch (motion_direction.vertical) {
+                .up => .jumping_start,
+                .down => .jumping_end,
+                .none => .jumping_end,
+            };
+        }
+
+        return .idle;
     }
 
     fn getAnimationToDraw(
-        self: *PlayerAnimation,
-        state: states,
+        self: PlayerAnimation,
+        surface_state: surface_states,
         motion_direction: motion_directions,
     ) detailed_animation_states {
-        const state_to_change_to = getDetailedAnimation(state, motion_direction);
+        const state_to_change_to = getDetailedAnimation(surface_state, motion_direction);
         const state_to_change_to_priority = getAnimationPriority(state_to_change_to);
         const current_state_priority = getAnimationPriority(self.current_state);
 
@@ -109,13 +119,20 @@ pub const PlayerAnimation = struct {
             return state_to_change_to;
         }
 
-        self.state_to_change_to = state_to_change_to;
         return state_to_change_to;
     }
 
+    const surface_states = struct {
+        is_on_ground: bool,
+        is_on_wall: bool,
+        wall_side: engine.physics.direction.horizontal,
+        is_on_roof: bool,
+        can_jump: bool,
+    };
+
     pub fn drawAnimationFrame(
         self: *PlayerAnimation,
-        state: states,
+        surface_state: surface_states,
         motion_direction: motion_directions,
         facing_direction: direction.horizontal,
         center_position: rl.Vector2,
@@ -124,7 +141,7 @@ pub const PlayerAnimation = struct {
     ) void {
         _ = zoom;
         self.is_current_complete = true;
-        const anime = self.getAnimationToDraw(state, motion_direction);
+        const anime = self.getAnimationToDraw(surface_state, motion_direction);
         var texture = self.animation_textures[@intFromEnum(anime)];
         const number_of_frame = texture.frame_count;
 
