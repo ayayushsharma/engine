@@ -19,6 +19,8 @@ pub const HORIZONTAL_SPEED = world.constants.BASE_RENDER_BLOCK_SIZE * 10;
 pub const GRAVITY = world.constants.DEFAULT_GRAVITY * 2;
 
 pub const PLAYER_BLOCK_SIZE = ncast(f32, world.constants.BASE_RENDER_BLOCK_SIZE) / 3;
+const EFFECTIVE_PLAYER_ZOOM: f32 = PLAYER_BLOCK_SIZE / world.constants.BASE_PIXEL_BLOCK_SIZE;
+
 pub const HITBOX_HEIGHT = ncast(i32, PLAYER_BLOCK_SIZE * 3.0);
 pub const HITBOX_WIDTH = ncast(i32, PLAYER_BLOCK_SIZE * 1.0);
 
@@ -325,7 +327,7 @@ pub const Player = struct {
             },
             self.facing_direction,
             self.getHitBoxCenter(),
-            2.0,
+            EFFECTIVE_PLAYER_ZOOM,
             delta,
         );
     }

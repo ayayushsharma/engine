@@ -139,7 +139,6 @@ pub const PlayerAnimation = struct {
         zoom: f32,
         delta: f32,
     ) void {
-        _ = zoom;
         self.is_current_complete = true;
         const anime = self.getAnimationToDraw(surface_state, motion_direction);
         var texture = self.animation_textures[@intFromEnum(anime)];
@@ -151,7 +150,15 @@ pub const PlayerAnimation = struct {
             .left => true,
         };
 
-        const sprite_box = rl.Rectangle.init(center_position.x, center_position.y, 100.0, 100.0);
+        const effective_texture_width = zoom * texture.size.width;
+        const effective_texture_height = zoom * texture.size.height;
+
+        const sprite_box = rl.Rectangle.init(
+            center_position.x - effective_texture_width / 2,
+            center_position.y - effective_texture_height / 2,
+            effective_texture_width,
+            effective_texture_height,
+        );
 
         texture.drawSprite(self.sprite_frame, sprite_box, .white, flipped);
 

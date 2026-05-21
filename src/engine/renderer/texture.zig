@@ -7,7 +7,11 @@ pub const Texture = struct {
     frame_count: i32,
     size: dimensions,
 
-    pub const dimensions = struct { width: f32, height: f32 };
+    pub const dimensions = struct {
+        full_width: f32,
+        width: f32,
+        height: f32
+    };
 
     pub fn init(image_path: [:0]const u8, frame_count: i32) !Texture {
         const texture = try rl.loadTexture(image_path);
@@ -17,7 +21,8 @@ pub const Texture = struct {
             .texture = texture,
             .frame_count = frame_count,
             .size = .{
-                .width = ncast(f32, texture.width),
+                .full_width = ncast(f32, texture.width),
+                .width = ncast(f32, texture.width) / ncast(f32, frame_count),
                 .height = ncast(f32, texture.height),
             },
         };
@@ -29,11 +34,11 @@ pub const Texture = struct {
 
     pub fn drawSprite(self: *Texture, frame: i32, sprite_box: rl.Rectangle, color: rl.Color, flipped: bool) void {
         const frame_count = ncast(f32, self.frame_count);
-        const width = self.size.width / frame_count;
+        const width = self.size.width;
         const flipped_adjusted_width = if (!flipped) width else -width;
 
         const source = rl.Rectangle.init(
-            self.size.width / frame_count * ncast(f32, frame),
+            self.size.full_width / frame_count * ncast(f32, frame),
             0,
             flipped_adjusted_width,
             self.size.height,

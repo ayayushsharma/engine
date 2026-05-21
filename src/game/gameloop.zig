@@ -81,7 +81,7 @@ pub const Game = struct {
         rl.drawRectangleLinesEx(self.player.sprite_box, 1.0, rl.Color.pink);
 
         if (self.render_type == .all_assets) {
-            self.player.drawTexture(delta_time);
+            // self.player.drawTexture(delta_time);
             self.player.drawAnimation(delta_time);
         }
 
