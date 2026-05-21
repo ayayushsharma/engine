@@ -8,7 +8,6 @@ const Texture = engine.renderer.texture.Texture;
 const log = @import("log");
 
 pub const PlayerAnimation = struct {
-    previous_state: detailed_animation_states = .idle,
     current_state: detailed_animation_states = .idle,
     state_to_change_to: ?detailed_animation_states = null,
     is_current_complete: bool = false,
@@ -146,10 +145,14 @@ pub const PlayerAnimation = struct {
         surface_state: surface_states,
         motion_direction: motion_directions,
     ) detailed_animation_states {
-        _ = self;
         const in_air = !surface_state.is_on_roof and
             !surface_state.is_on_wall and
             !surface_state.is_on_ground;
+
+        _ = self;
+        // if (self.current_state == .jumping_end_hover and surface_state.is_on_ground) {
+        //     return .jumping_end;
+        // }
 
         if (surface_state.is_on_ground) {
             return switch (motion_direction.horizontal) {
@@ -187,6 +190,8 @@ pub const PlayerAnimation = struct {
 
         if (is_higher_priority_state) {
             return next_anime;
+        } else {
+            return self.current_state;
         }
 
         return next_anime;
