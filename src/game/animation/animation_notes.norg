@@ -1,0 +1,14 @@
+* Scenarios in player animations
+
+** Current animation is complete
+   - Higher Priority state has come -> Switch immediately to next state
+   - Lower Priority state has come -> Switch immediately to next state
+
+** Current animation is not complete
+   - Higher Priority state has come -> Switch immediately to next state
+   - Lower Priority state has come
+   -- Wait till the current animation gets complete
+   -- Switch to next animation
+
+** When is the player animation considered complete
+   - When it has given fill frame duration to the last frame of the animation

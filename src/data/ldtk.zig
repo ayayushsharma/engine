@@ -2,8 +2,10 @@
 // Zig conversion of the LDtk JSON schema types.
 // Requires the standard library's std.json for parsing.
 
+const rl = @import("raylib");
 const std = @import("std");
 const json = std.json;
+const log = @import("log");
 const Allocator = std.mem.Allocator;
 
 // ─────────────────────────────────────────────
@@ -368,7 +370,7 @@ pub const FieldDefinition = struct {
     autoChainRef: bool,
     canBeNull: bool,
     /// Default value when selected value is null or invalid
-    defaultOverride: ?json.Value = null,
+    defaultOverride: ?[]const u8 = null,
     doc: ?[]const u8 = null,
     editorAlwaysShow: bool,
     editorCutLongValues: bool,
@@ -514,10 +516,10 @@ pub const FieldInstance = struct {
     __identifier: []const u8,
     __tile: ?TilesetRectangle = null,
     __type: []const u8,
-    /// Actual value – type depends on __type. Use json.Value for dynamic dispatch.
-    __value: json.Value,
+    /// Actual value – type depends on __type. Use []const u8 for dynamic dispatch.
+    __value: []const u8,
     defUid: i32,
-    realEditorValues: []json.Value,
+    realEditorValues: [][]const u8,
 };
 
 pub const EntityInstance = struct {
@@ -610,7 +612,7 @@ pub const Level = struct {
 
 pub const LdtkTocInstanceData = struct {
     /// Field values with exportToToc enabled; typing depends on field value types
-    fields: json.Value,
+    fields: []const u8,
     heiPx: i32,
     iids: ReferenceToAnEntityInstance,
     widPx: i32,
@@ -746,19 +748,7 @@ pub fn parseLdtkJSON(allocator: Allocator, data: []const u8) !json.Parsed(LdtkJS
 }
 
 pub fn loadLevel(allocator: Allocator, path: []const u8) !json.Parsed(LdtkJSON) {
-    var buffer: [10_000_000]u8 = undefined;
-
-    var threaded: std.Io.Threaded = .init(allocator, .{});
-    defer threaded.deinit();
-
-    const io_interface = threaded.io();
-
-    const last_slash = std.mem.lastIndexOfScalar(u8, path, '/') orelse 0;
-    const base_dir = path[0..last_slash];
-    const file_name = path[last_slash + 1 ..];
-
-    const dir = try std.Io.Dir.cwd().openDir(io_interface, base_dir, .{});
-    const file = try std.Io.Dir.readFile(dir, io_interface, file_name, &buffer);
-
-    return try parseLdtkJSON(allocator, buffer[0..file.len]);
+    defer log.complete("Parsing Ldtk json");
+    const buffer = try rl.loadFileData(path);
+    return try parseLdtkJSON(allocator, buffer);
 }

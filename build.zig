@@ -19,10 +19,17 @@ pub fn build(b: *std.Build) !void {
         .optimize = optimize,
     });
 
-    const data_mod = b.createModule(.{ .root_source_file = b.path("src/data/root.zig") });
     const log_mod = b.createModule(.{ .root_source_file = b.path("src/log.zig") });
+    log_mod.addImport("raylib", raylib);
+
+    const data_mod = b.createModule(.{ .root_source_file = b.path("src/data/root.zig") });
+    data_mod.addImport("raylib", raylib);
+    data_mod.addImport("log", log_mod);
+
     const engine_mod = b.createModule(.{ .root_source_file = b.path("src/engine/root.zig") });
     engine_mod.addImport("raylib", raylib);
+    engine_mod.addImport("log", log_mod);
+    engine_mod.addImport("data", data_mod);
 
     exe_mod.addImport("raylib", raylib);
     exe_mod.addImport("data", data_mod);
@@ -47,10 +54,11 @@ pub fn build(b: *std.Build) !void {
         try emcc_flags.put("-g", {});
 
         var emcc_settings = emsdk.emccDefaultSettings(b.allocator, .{ .optimize = optimize });
-        try emcc_settings.put("-sASSERTIONS", "2");
-        try emcc_settings.put("-sSAFE_HEAP=1", "1");
-        try emcc_settings.put("-sSTACK_OVERFLOW_CHECK", "1");
-        try emcc_settings.put("-sSTACK_SIZE", "100_000_000");
+        try emcc_settings.put("STACK_OVERFLOW_CHECK", "1");
+        try emcc_settings.put("ALLOW_MEMORY_GROWTH", "1");
+        try emcc_settings.put("NO_EXIT_RUNTIME", "1");
+        try emcc_settings.put("FORCE_FILESYSTEM", "1");
+        try emcc_settings.put("STACK_SIZE", "8388608");
 
         const emcc_step = emsdk.emccStep(b, raylib_artifact, wasm, .{
             .optimize = optimize,
@@ -77,6 +85,7 @@ pub fn build(b: *std.Build) !void {
     const exe = b.addExecutable(.{
         .name = "engine-zig",
         .root_module = exe_mod,
+        .use_llvm = true,
     });
 
     b.installArtifact(exe);

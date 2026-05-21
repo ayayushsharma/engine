@@ -1,5 +1,9 @@
+const log = @import("log");
+
 pub const Camera = @import("camera/root.zig").Camera;
+pub const physics = @import("physics/root.zig");
 pub const cm = @import("cm/root.zig");
+pub const renderer = @import("renderer/root.zig");
 
 const rl = @import("raylib");
 
@@ -8,10 +12,11 @@ pub const EngineConfig = struct {
     height: i32,
     title: [:0]const u8,
     fps: i32,
-    log_level: rl.TraceLogLevel = .warning,
+    log_level: rl.TraceLogLevel = .debug,
 };
 
 pub fn init(config: EngineConfig) void {
+    defer log.complete("Engine Init");
     rl.setTraceLogLevel(config.log_level);
     rl.initWindow(config.width, config.height, config.title);
     rl.setTargetFPS(config.fps);
