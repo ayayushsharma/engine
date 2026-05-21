@@ -49,7 +49,7 @@ pub const Game = struct {
             .environment = environment,
             .is_paused = false,
             .flat_environment = flat_environment, // moved into struct
-            .render_type = .only_hitbox,
+            .render_type = .all_assets,
         };
     }
 
@@ -75,13 +75,13 @@ pub const Game = struct {
 
         for (self.flat_environment.items) |items| {
             rl.drawRectangleRec(items.rectangle, items.color);
-            // rl.drawRectangleLinesEx(items.rectangle, 1.0, items.color);
         }
-        rl.drawRectangleLinesEx(self.player.hitbox, 1.0, rl.Color.red);
-        rl.drawRectangleLinesEx(self.player.sprite_box, 1.0, rl.Color.pink);
 
-        if (self.render_type == .all_assets) {
-            // self.player.drawTexture(delta_time);
+        if (self.render_type == .only_hitbox) {
+            rl.drawRectangleLinesEx(self.player.hitbox, 1.0, rl.Color.red);
+        }
+
+        if (self.render_type == .all_assets or self.render_type == .all_assets) {
             self.player.drawAnimation(delta_time);
         }
 

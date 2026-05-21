@@ -35,7 +35,6 @@ const offset_action_type = enum {
 pub const Player = struct {
     position: rl.Vector2,
     hitbox: rl.Rectangle,
-    sprite_box: rl.Rectangle,
 
     vertical_speed: f32 = 0,
 
@@ -46,12 +45,6 @@ pub const Player = struct {
     can_jump: bool = false,
 
     player_texture: engine.renderer.texture.Texture,
-
-    sprite_frame: i32 = 0,
-    since_sprite_frame_time: f32 = 0,
-
-    /// this is in milliseconds
-    individual_frame_duration: f32 = 0.100,
 
     player_animation: PlayerAnimation,
     player_state: PlayerAnimation.states = .on_ground,
@@ -77,12 +70,6 @@ pub const Player = struct {
                 width,
                 height,
             ),
-            .sprite_box = rl.Rectangle.init(
-                position.x,
-                position.y,
-                SPRITE_WIDTH,
-                SPRITE_HEIGHT,
-            ),
             .player_texture = texture,
             .player_animation = player_animation,
         };
@@ -98,11 +85,6 @@ pub const Player = struct {
     inline fn updateHitBox(self: *Player) void {
         self.hitbox.x = self.position.x;
         self.hitbox.y = self.position.y;
-    }
-
-    inline fn updateSpriteBox(self: *Player) void {
-        self.sprite_box.x = self.getHitBoxCenter().x - SPRITE_WIDTH / 2;
-        self.sprite_box.y = self.getHitBoxCenter().y - SPRITE_HEIGHT / 2;
     }
 
     inline fn addGravityEffect(self: *Player, delta: f32) void {
@@ -293,23 +275,6 @@ pub const Player = struct {
         self.manageVerticalOffsets(.reset);
 
         self.updateHitBox();
-        self.updateSpriteBox();
-    }
-
-    pub fn drawTexture(self: *Player, delta: f32) void {
-        const flipped = switch (self.facing_direction) {
-            .none => false,
-            .right => false,
-            .left => true,
-        };
-        self.player_texture.drawSprite(self.sprite_frame, self.sprite_box, .white, flipped);
-
-        self.since_sprite_frame_time += delta;
-        if (self.since_sprite_frame_time > self.individual_frame_duration) {
-            self.sprite_frame += 1;
-            self.sprite_frame = @rem(self.sprite_frame, 8);
-            self.since_sprite_frame_time = 0;
-        }
     }
 
     pub fn drawAnimation(self: *Player, delta: f32) void {

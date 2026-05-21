@@ -750,9 +750,5 @@ pub fn parseLdtkJSON(allocator: Allocator, data: []const u8) !json.Parsed(LdtkJS
 pub fn loadLevel(allocator: Allocator, path: []const u8) !json.Parsed(LdtkJSON) {
     defer log.complete("Parsing Ldtk json");
     const buffer = try rl.loadFileData(path);
-    log.debug("Buffer size {d}", .{
-        buffer.len,
-    });
-    rl.traceLog(.info, "buffer size {d}", .{buffer.len});
     return try parseLdtkJSON(allocator, buffer);
 }

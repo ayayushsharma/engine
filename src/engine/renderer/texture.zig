@@ -7,11 +7,7 @@ pub const Texture = struct {
     frame_count: i32,
     size: dimensions,
 
-    pub const dimensions = struct {
-        full_width: f32,
-        width: f32,
-        height: f32
-    };
+    pub const dimensions = struct { full_width: f32, width: f32, height: f32 };
 
     pub fn init(image_path: [:0]const u8, frame_count: i32) !Texture {
         const texture = try rl.loadTexture(image_path);
@@ -23,6 +19,30 @@ pub const Texture = struct {
             .size = .{
                 .full_width = ncast(f32, texture.width),
                 .width = ncast(f32, texture.width) / ncast(f32, frame_count),
+                .height = ncast(f32, texture.height),
+            },
+        };
+    }
+
+    /// get 1-indexed frame from a image and loads as a separate texture
+    pub fn init_frame(image_path: [:0]const u8, frame_count: i32, frame: i32) !Texture {
+        var image = try rl.loadImage(image_path);
+        const single_frame_width = @divExact(ncast(i32, image.width), frame_count);
+        rl.imageCrop(&image, .init(
+            ncast(f32, single_frame_width) * ncast(f32, frame - 1),
+            0,
+            ncast(f32, single_frame_width),
+            ncast(f32, image.height),
+        ));
+        const texture = try rl.loadTextureFromImage(image);
+
+        return .{
+            .image_path = image_path,
+            .texture = texture,
+            .frame_count = 1,
+            .size = .{
+                .full_width = ncast(f32, texture.width),
+                .width = ncast(f32, texture.width),
                 .height = ncast(f32, texture.height),
             },
         };
