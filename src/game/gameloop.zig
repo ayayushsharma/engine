@@ -2,9 +2,11 @@ const std = @import("std");
 const rl = @import("raylib");
 const data = @import("data");
 const player = @import("player/player.zig");
-const level = @import("level/level.zig");
+const level = @import("level/root.zig").level_parse;
 const engine = @import("engine");
 const world = @import("world/root.zig");
+
+const animation = @import("animation/root.zig");
 
 const assert = std.debug.assert;
 
@@ -21,6 +23,8 @@ pub const Game = struct {
     allocator: std.mem.Allocator,
     render_type: engine.renderer.render_type,
 
+    back_animation: animation.BackgroundAnimation,
+
     pub fn init(
         allocator: std.mem.Allocator,
         player_obj: *player.Player,
@@ -28,7 +32,30 @@ pub const Game = struct {
     ) !Game {
         const level_data_path = "resources/levels/levels.ldtk";
         const level_id = "Level_0";
-        var grids = try level.getGroundItems(allocator, level_data_path, level_id);
+
+        const raw_ldtk_json = data.ldtk.loadLevel(allocator, level_data_path) catch {
+            unreachable;
+        };
+
+        const ldtk_json = raw_ldtk_json.value;
+        const ldtk_level = try level.getLevelData(ldtk_json, level_id);
+
+        const groundLayer = try level.getLayer(ldtk_level, .GroundGrid);
+        var grids = try level.mergeGroundBlocks(allocator, groundLayer);
+
+        const groundTileLayer = try level.getLayer(ldtk_level, .GroundTiles);
+
+        const groundTile = level.getGroundTiles(allocator, groundTileLayer);
+
+        std.debug.print("Asset Location : {s}\n", .{groundTile.asset_path});
+
+        const background_texture = try animation.BackgroundAnimation.init(
+            groundTile.grid,
+            groundTile.asset_path,
+            groundTile.pixel_size,
+            world.constants.BASE_RENDER_BLOCK_SIZE,
+        );
+
         var environment = &grids;
 
         const RectangleItem = engine.cm.models.RectangleItem;
@@ -50,6 +77,8 @@ pub const Game = struct {
             .is_paused = false,
             .flat_environment = flat_environment, // moved into struct
             .render_type = .all_assets,
+
+            .back_animation = background_texture,
         };
     }
 
@@ -73,15 +102,15 @@ pub const Game = struct {
             }
         }
 
-        for (self.flat_environment.items) |items| {
-            rl.drawRectangleRec(items.rectangle, items.color);
-        }
-
         if (self.render_type == .only_hitbox) {
             rl.drawRectangleLinesEx(self.player.hitbox, 1.0, rl.Color.red);
+            for (self.flat_environment.items) |items| {
+                rl.drawRectangleRec(items.rectangle, items.color);
+            }
         }
 
-        if (self.render_type == .all_assets or self.render_type == .all_assets) {
+        if (self.render_type == .all_assets) {
+            self.back_animation.drawAnimationFrame();
             self.player.drawAnimation(delta_time);
         }
 

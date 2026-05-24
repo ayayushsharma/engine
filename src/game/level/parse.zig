@@ -14,11 +14,10 @@ pub const LdtkProcessingErr = error{
     LayerNotFound,
 };
 
-pub fn getGroundGrid(level: data.ldtk.Level) !data.ldtk.LayerInstance {
-    const Layers = world.defs.Layers;
+pub fn getLayer(level: data.ldtk.Level, layer: world.defs.Layers) !data.ldtk.LayerInstance {
     const layer_instances = level.layerInstances.?;
     for (layer_instances) |layer_instance| {
-        if (mem.eql(u8, layer_instance.__identifier, Layers.GroundGrid.tagName())) {
+        if (mem.eql(u8, layer_instance.__identifier, layer.tagName())) {
             return layer_instance;
         }
     }
@@ -55,19 +54,11 @@ fn getCollisionType(block: world.defs.GroundGridBlock) engine.cm.models.Collisio
     };
 }
 
-pub fn getGroundItems(
+pub fn mergeGroundBlocks(
     allocator: mem.Allocator,
-    path: []const u8,
-    level_id: []const u8,
+    layer: data.ldtk.LayerInstance,
 ) !GridBlocks {
-    const ldtk_data = try data.ldtk.loadLevel(allocator, path);
-    defer ldtk_data.deinit();
-
     var ground: GridBlocks = .init(allocator);
-    const level = try getLevelData(ldtk_data.value, level_id);
-
-    const layer = try getGroundGrid(level);
-
     const layer_height: usize = @intCast(layer.__cHei);
     const layer_width: usize = @intCast(layer.__cWid);
 
@@ -109,6 +100,27 @@ pub fn getGroundItems(
         var continous_blocks: i32 = 1;
 
         for (1..layer_height) |row| {
+            {
+                // TODO: remove this block
+                // The loop without it was supposed to be optimized level
+                // but the block location are incorrect
+                const prev_block = matrix[row][col];
+                const prev_block_type: GroundGridBlock = @enumFromInt(prev_block);
+                const gop = try ground.getOrPut(prev_block_type);
+                assert(gop.found_existing);
+                try gop.value_ptr.append(allocator, .{
+                    .rectangle = .{
+                        .x = BASE_RENDER_BLOCK_SIZE * cast(f32, col),
+                        .y = BASE_RENDER_BLOCK_SIZE * cast(f32, row),
+                        .height = BASE_RENDER_BLOCK_SIZE,
+                        .width = BASE_RENDER_BLOCK_SIZE,
+                    },
+                    .color = getBlockColor(prev_block_type),
+                    .is_blocking = getCollisionType(prev_block_type),
+                });
+                continue;
+            }
+
             const is_same_block = matrix[row - 1][col] == matrix[row][col];
 
             if (is_same_block) {
@@ -162,4 +174,22 @@ pub fn getGroundItems(
     }
 
     return ground;
+}
+
+const TilingMetadata = struct {
+    grid: []data.ldtk.TileInstance,
+    asset_path: [:0]const u8,
+    pixel_size: i32,
+};
+
+pub fn getGroundTiles(
+    allocator: std.mem.Allocator,
+    layer: data.ldtk.LayerInstance,
+) TilingMetadata {
+    const path = std.Io.Dir.path.joinZ(allocator, &[_][]const u8{ "resources/levels/", layer.__tilesetRelPath.? }) catch unreachable;
+    return .{
+        .grid = layer.gridTiles,
+        .asset_path = path,
+        .pixel_size = layer.__gridSize,
+    };
 }
