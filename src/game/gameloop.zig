@@ -103,7 +103,7 @@ pub const Game = struct {
         }
 
         if (self.render_type == .only_hitbox) {
-            rl.drawRectangleLinesEx(self.player.hitbox, 1.0, rl.Color.red);
+            rl.drawRectangleLinesEx(self.player.hitbox, 5.0, rl.Color.red);
             for (self.flat_environment.items) |items| {
                 rl.drawRectangleRec(items.rectangle, items.color);
             }

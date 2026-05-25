@@ -18,14 +18,11 @@ pub const JUMP_SPEED = world.constants.BASE_RENDER_BLOCK_SIZE * 20;
 pub const HORIZONTAL_SPEED = world.constants.BASE_RENDER_BLOCK_SIZE * 10;
 pub const GRAVITY = world.constants.DEFAULT_GRAVITY * 2;
 
-pub const PLAYER_BLOCK_SIZE = ncast(f32, world.constants.BASE_RENDER_BLOCK_SIZE) / 3;
+pub const PLAYER_BLOCK_SIZE = ncast(f32, world.constants.BASE_RENDER_BLOCK_SIZE) / 2;
 const EFFECTIVE_PLAYER_ZOOM: f32 = PLAYER_BLOCK_SIZE / world.constants.BASE_PIXEL_BLOCK_SIZE;
 
 pub const HITBOX_HEIGHT = ncast(i32, PLAYER_BLOCK_SIZE * 3.0);
 pub const HITBOX_WIDTH = ncast(i32, PLAYER_BLOCK_SIZE * 1.0);
-
-pub const SPRITE_HEIGHT = ncast(i32, PLAYER_BLOCK_SIZE * 5.0);
-pub const SPRITE_WIDTH = ncast(i32, PLAYER_BLOCK_SIZE * 5.0);
 
 const offset_action_type = enum {
     create,
