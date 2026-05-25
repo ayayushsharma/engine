@@ -6,6 +6,7 @@ pub const Texture = struct {
     texture: rl.Texture,
     frame_count: i32,
     size: dimensions,
+    pixel_size: ?i32 = null,
 
     pub const dimensions = struct { full_width: f32, width: f32, height: f32 };
 
@@ -21,6 +22,21 @@ pub const Texture = struct {
                 .width = ncast(f32, texture.width) / ncast(f32, frame_count),
                 .height = ncast(f32, texture.height),
             },
+        };
+    }
+
+    pub fn init_tile(image_path: [:0]const u8, pixel_size: i32) !Texture {
+        const texture = try rl.loadTexture(image_path);
+        return .{
+            .image_path = image_path,
+            .texture = texture,
+            .frame_count = pixel_size, // TODO: fix this, can lead to bugs,
+            .size = .{
+                .full_width = ncast(f32, texture.width),
+                .width = ncast(f32, texture.width),
+                .height = ncast(f32, texture.height),
+            },
+            .pixel_size = pixel_size,
         };
     }
 
@@ -65,5 +81,16 @@ pub const Texture = struct {
         );
 
         self.texture.drawPro(source, sprite_box, .init(0, 0), 0, color);
+    }
+
+    pub fn drawTile(self: *Texture, source: rl.Vector2, target: rl.Rectangle, color: rl.Color) void {
+        const pixel_size = ncast(f32, self.pixel_size.?);
+        const source_rectangle = rl.Rectangle.init(
+            source.x,
+            source.y,
+            pixel_size,
+            pixel_size,
+        );
+        self.texture.drawPro(source_rectangle, target, .init(0, 0), 0, color);
     }
 };

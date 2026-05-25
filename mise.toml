@@ -1,9 +1,10 @@
 [tools]
 zig = "0.16"
 "npm:http-server" = "latest"
+prettier = "latest"
 
 [tasks.format]
-run = "zig fmt ."
+run = "zig fmt . && prettier --check ./web --write"
 description = "Formats codebase"
 
 [tasks.debug-run]
@@ -18,11 +19,19 @@ description = "Runs the Game"
 run = "mise exec zig@master -- zig build -Dtarget=wasm32-emscripten"
 description = "Builds project for web"
 
+[tasks.web-build-prod]
+run = "mise exec zig@master -- zig build -Dtarget=wasm32-emscripten -Doptimize=ReleaseSmall"
+description = "Builds project for web"
+
 [tasks.debug-run-web]
 depends = ["web-build"]
-run = "http-server ./zig-out/web"
+run = "http-server ./zig-out/web -c10"
 description = "Builds project for web"
 
 [tasks.try]
 run = "zig build check"
 description = "Checks if project compiles or not"
+
+[tasks.delete-cache]
+run = 'find . -type d -name ".zig-cache" -prune -exec rm -rf {} +'
+description = "clear all cache recursively"

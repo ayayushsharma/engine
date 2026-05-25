@@ -9,7 +9,6 @@ pub fn build(b: *std.Build) !void {
         .target = target,
         .optimize = optimize,
     });
-    const emsdk_dep = raylib_dep.builder.dependency("emsdk", .{});
     const raylib = raylib_dep.module("raylib");
     const raylib_artifact = raylib_dep.artifact("raylib");
 
@@ -64,7 +63,7 @@ pub fn build(b: *std.Build) !void {
             .optimize = optimize,
             .flags = emcc_flags,
             .settings = emcc_settings,
-            .shell_file_path = emsdk_dep.path("upstream/emscripten/src/shell.html"),
+            .shell_file_path = b.path("web/index.html"),
             .install_dir = install_dir,
             .embed_paths = &.{.{ .src_path = "resources/" }},
         });

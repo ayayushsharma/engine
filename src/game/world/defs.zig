@@ -1,6 +1,7 @@
 /// The layers that can present in the world
 pub const Layers = enum {
     GroundGrid,
+    GroundTiles,
 
     pub fn tagName(self: Layers) []const u8 {
         return @tagName(self)[0..];

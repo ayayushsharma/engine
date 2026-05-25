@@ -3,7 +3,6 @@ const std = @import("std");
 const rl = @import("raylib");
 const data = @import("data");
 const player = @import("player/player.zig");
-const level = @import("level/level.zig");
 const engine = @import("engine");
 const game = @import("gameloop.zig");
 const ncast = data.cast.ncast;
