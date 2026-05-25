@@ -43,7 +43,7 @@ pub fn build(b: *std.Build) !void {
     if (target.query.os_tag == .emscripten) {
         const emsdk = rlz.emsdk;
         const wasm = b.addLibrary(.{
-            .name = "engine-zig",
+            .name = "engine",
             .root_module = exe_mod,
         });
 
@@ -78,11 +78,20 @@ pub fn build(b: *std.Build) !void {
 
         emrun_step.dependOn(emcc_step);
         run_step.dependOn(emrun_step);
+
+        const html_out = b.addInstallFileWithDir(
+            .{ .cwd_relative = b.getInstallPath(install_dir, "engine.html") },
+            install_dir,
+            "index.html",
+        );
+        html_out.step.dependOn(emcc_step);
+        b.getInstallStep().dependOn(&html_out.step);
+
         return;
     }
 
     const exe = b.addExecutable(.{
-        .name = "engine-zig",
+        .name = "engine",
         .root_module = exe_mod,
         .use_llvm = true,
     });
