@@ -100,27 +100,6 @@ pub fn mergeGroundBlocks(
         var continous_blocks: i32 = 1;
 
         for (1..layer_height) |row| {
-            {
-                // TODO: remove this block
-                // The loop without it was supposed to be optimized level
-                // but the block location are incorrect
-                const prev_block = matrix[row][col];
-                const prev_block_type: GroundGridBlock = @enumFromInt(prev_block);
-                const gop = try ground.getOrPut(prev_block_type);
-                assert(gop.found_existing);
-                try gop.value_ptr.append(allocator, .{
-                    .rectangle = .{
-                        .x = BASE_RENDER_BLOCK_SIZE * cast(f32, col),
-                        .y = BASE_RENDER_BLOCK_SIZE * cast(f32, row),
-                        .height = BASE_RENDER_BLOCK_SIZE,
-                        .width = BASE_RENDER_BLOCK_SIZE,
-                    },
-                    .color = getBlockColor(prev_block_type),
-                    .is_blocking = getCollisionType(prev_block_type),
-                });
-                continue;
-            }
-
             const is_same_block = matrix[row - 1][col] == matrix[row][col];
 
             if (is_same_block) {
@@ -139,7 +118,7 @@ pub fn mergeGroundBlocks(
                 try gop.value_ptr.append(allocator, .{
                     .rectangle = .{
                         .x = BASE_RENDER_BLOCK_SIZE * cast(f32, col),
-                        .y = BASE_RENDER_BLOCK_SIZE * (cast(f32, row) - cast(f32, 1 + continous_blocks)),
+                        .y = BASE_RENDER_BLOCK_SIZE * (cast(f32, row) - cast(f32, continous_blocks)),
                         .height = cast(f32, continous_blocks) * BASE_RENDER_BLOCK_SIZE,
                         .width = BASE_RENDER_BLOCK_SIZE,
                     },
@@ -161,7 +140,7 @@ pub fn mergeGroundBlocks(
                 try gop.value_ptr.append(allocator, .{
                     .rectangle = .{
                         .x = BASE_RENDER_BLOCK_SIZE * cast(f32, col),
-                        .y = BASE_RENDER_BLOCK_SIZE * (cast(f32, row) - cast(f32, 1 + continous_blocks)),
+                        .y = BASE_RENDER_BLOCK_SIZE * (cast(f32, row + 1) - cast(f32, continous_blocks)),
                         .height = cast(f32, continous_blocks) * BASE_RENDER_BLOCK_SIZE,
                         .width = BASE_RENDER_BLOCK_SIZE,
                     },
@@ -186,7 +165,10 @@ pub fn getGroundTiles(
     allocator: std.mem.Allocator,
     layer: data.ldtk.LayerInstance,
 ) TilingMetadata {
-    const path = std.Io.Dir.path.joinZ(allocator, &[_][]const u8{ "resources/levels/", layer.__tilesetRelPath.? }) catch unreachable;
+    const path = std.Io.Dir.path.joinZ(allocator, &[_][]const u8{
+        "resources/levels/",
+        layer.__tilesetRelPath.?,
+    }) catch unreachable;
     return .{
         .grid = layer.gridTiles,
         .asset_path = path,
