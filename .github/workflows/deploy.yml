@@ -1,0 +1,89 @@
+name: Build and Deploy Zig WASM to GitHub Pages
+
+on:
+  push:
+    branches: [develop]
+  workflow_dispatch:
+
+    permissions:
+      contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    name: Build WASM & Deploy
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      # ── Checkout ─────────────────────────────────────────────────────────────
+      - name: Checkout with submodules and LFS
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive       # initialises and updates all submodules
+          lfs: true                   # enables Git LFS during checkout
+          fetch-depth: 0
+
+      - name: Pull LFS objects
+        run: git lfs pull
+
+        # ── Zig ──────────────────────────────────────────────────────────────────
+      - name: Install Zig
+        uses: mlugg/setup-zig@v2
+        with:
+          version: 0.17.0-dev.135+9df02121d
+
+      - name: Confirm Zig version
+        run: zig version
+
+        # ── Build ─────────────────────────────────────────────────────────────────
+        #
+        # Option A – project has a build.zig (recommended)
+        #   Artifacts land wherever your build.zig puts them (e.g. zig-out/lib/).
+        #
+        # Option B – single-file compile (uncomment if you have no build.zig)
+        #   zig build-exe src/main.zig \
+        #     -target wasm32-freestanding \
+        #     -O ReleaseSafe \
+        #     -fno-entry \
+        #     --export=init \
+        #     --export=update \
+        #     --name app \
+        #     -femit-bin=www/app.wasm
+
+      - name: Build WASM
+        run: zig build -Dtarget=wasm32-emscripten -Doptimize=ReleaseSmall
+
+        # ── Stage output for Pages ────────────────────────────────────────────────
+        #
+        # Adjust the cp sources to match your project layout.
+        # Common build output locations:
+        #   zig-out/lib/  – .wasm blobs emitted as libraries
+        #   zig-out/bin/  – .wasm blobs emitted as executables
+        #   www/          – if build.zig copies assets there itself
+
+      - name: Prepare Pages directory
+        run: |
+          mkdir -p _site
+          # cp -r www/* _site/              # your HTML / JS / CSS loader files
+          cp zig-out/web/* _site/    # compiled WASM blob(s)
+
+          # ── Deploy ───────────────────────────────────────────────────────────────
+      - name: Setup GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
