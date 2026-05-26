@@ -25,6 +25,8 @@ pub const Game = struct {
 
     back_animation: animation.BackgroundAnimation,
 
+    wallpaper: rl.Texture,
+
     pub fn init(
         allocator: std.mem.Allocator,
         player_obj: *player.Player,
@@ -56,6 +58,8 @@ pub const Game = struct {
             world.constants.BASE_RENDER_BLOCK_SIZE,
         );
 
+        const wallpaper = try rl.loadTexture("resources/assets/Background/nature_3/origbig.png");
+
         var environment = &grids;
 
         const RectangleItem = engine.cm.models.RectangleItem;
@@ -79,6 +83,7 @@ pub const Game = struct {
             .render_type = .all_assets,
 
             .back_animation = background_texture,
+            .wallpaper = wallpaper,
         };
     }
 
@@ -110,6 +115,11 @@ pub const Game = struct {
         }
 
         if (self.render_type == .all_assets) {
+            const wallpaper_pos = rl.Vector2.init(
+                (self.player.position.x / 2) - 1000,
+                (self.player.position.y / 2) - 300,
+            );
+            self.wallpaper.drawEx(wallpaper_pos, 0, 4, .white);
             self.back_animation.drawAnimationFrame();
             self.player.drawAnimation(delta_time);
         }

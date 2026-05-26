@@ -35,7 +35,7 @@ pub fn run_game() !void {
     var camera_obj: engine.Camera = .init(
         rl.Vector2.init(ncast(f32, screen_width / 2), ncast(f32, screen_height / 2)),
         player_obj.position,
-        1,
+        0.8,
     );
 
     var game_obj = try game.Game.init(allocator, &player_obj, &camera_obj);
