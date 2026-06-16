@@ -1,0 +1,37 @@
+* How Things are handled here
+  - In Progress marker tells which features are being worked at
+  - You can add further steps to a simple by adding another step with deeper
+    indentation inside it to show the dependency on the previous step
+
+
+* In progress
+
+
+
+* Plans
+
+** Engine
+   - Migrate collision logic to Engine
+
+** Animation
+   - Build animation frames using blender
+   -- Create a character asset in blender
+   --- Add animation to it
+   -- Create a pixel art pipelines from the animation blender file
+
+** Gameplay
+   - Add static enemies to the map
+   -- Make those enemies dynamic
+
+   - Add spawn points to the map
+
+   - Add more levels to the map
+
+   - Add checkpoints to the map
+
+   - Add moving platforms to the game
+
+   - Input register code has to be made generic
+   -- Add touchscreen based input registers
+
+   - Add intermediate screens to the game
