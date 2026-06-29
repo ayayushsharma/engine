@@ -27,6 +27,8 @@ pub const Game = struct {
 
     wallpaper: rl.Texture,
 
+    checkpoints: std.ArrayList(level.Checkpoints),
+
     pub fn init(
         allocator: std.mem.Allocator,
         player_obj: *player.Player,
@@ -43,9 +45,15 @@ pub const Game = struct {
         const ldtk_level = try level.getLevelData(ldtk_json, level_id);
 
         const groundLayer = try level.getLayer(ldtk_level, .GroundGrid);
-        var grids = try level.mergeGroundBlocks(allocator, groundLayer);
+        var grids = try level.getGroundBlocks(allocator, groundLayer);
 
         const groundTileLayer = try level.getLayer(ldtk_level, .GroundTiles);
+
+        const checkpoints = try level.getCheckpoints(allocator, ldtk_level);
+
+        player_obj.position = checkpoints.items.ptr[0].position;
+
+        std.debug.print("{any}\n", .{checkpoints});
 
         const groundTile = level.getGroundTiles(allocator, groundTileLayer);
 
@@ -84,6 +92,8 @@ pub const Game = struct {
 
             .back_animation = background_texture,
             .wallpaper = wallpaper,
+
+            .checkpoints = checkpoints,
         };
     }
 
@@ -122,6 +132,14 @@ pub const Game = struct {
             self.wallpaper.drawEx(wallpaper_pos, 0, 4, .white);
             self.back_animation.drawAnimationFrame();
             self.player.drawAnimation(delta_time);
+
+            for (self.checkpoints.items) |item| {
+                rl.drawCircle(
+                    data.cast.ncast(i32, item.position.x),
+                    data.cast.ncast(i32, item.position.y),
+                    100.0, rl.Color.red
+                );
+            }
         }
 
         self.camera.end();

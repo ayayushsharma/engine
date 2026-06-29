@@ -2,6 +2,17 @@
 pub const Layers = enum {
     GroundGrid,
     GroundTiles,
+    Entities,
+
+    pub fn tagName(self: Layers) []const u8 {
+        return @tagName(self)[0..];
+    }
+};
+
+
+/// Definition of Entities in the game
+pub const Entity = enum {
+    Checkpoints,
 
     pub fn tagName(self: Layers) []const u8 {
         return @tagName(self)[0..];

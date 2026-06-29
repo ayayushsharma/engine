@@ -7,7 +7,7 @@ const engine = @import("engine");
 const log = @import("log");
 
 const assert = std.debug.assert;
-const cast = data.cast.ncast;
+const ncast = data.cast.ncast;
 
 pub const LdtkProcessingErr = error{
     LevelNotFound,
@@ -54,7 +54,7 @@ fn getCollisionType(block: world.defs.GroundGridBlock) engine.cm.models.Collisio
     };
 }
 
-pub fn mergeGroundBlocks(
+pub fn getGroundBlocks(
     allocator: mem.Allocator,
     layer: data.ldtk.LayerInstance,
 ) !GridBlocks {
@@ -97,58 +97,72 @@ pub fn mergeGroundBlocks(
     const BASE_RENDER_BLOCK_SIZE: f32 = world.constants.BASE_RENDER_BLOCK_SIZE;
 
     for (0..layer_width) |col| {
-        var continous_blocks: i32 = 1;
-
         for (1..layer_height) |row| {
-            const is_same_block = matrix[row - 1][col] == matrix[row][col];
 
-            if (is_same_block) {
-                continous_blocks += 1;
-            } else {
-                const prev_block = matrix[row - 1][col];
-                const prev_block_type: GroundGridBlock = @enumFromInt(prev_block);
-                if (prev_block_type.isBlank()) {
-                    continous_blocks = 1;
-                    continue;
-                }
+            const block = matrix[row][col];
+            const block_type : GroundGridBlock = @enumFromInt(block);
+            const gop = try ground.getOrPut(block_type);
+            try gop.value_ptr.append(allocator, .{
+                .rectangle = .{
+                    .x = BASE_RENDER_BLOCK_SIZE * ncast(f32, col),
+                    .y = BASE_RENDER_BLOCK_SIZE * ncast(f32, row),
+                    .height = BASE_RENDER_BLOCK_SIZE,
+                    .width = BASE_RENDER_BLOCK_SIZE,
+                },
+                .color = getBlockColor(block_type),
+                .is_blocking = getCollisionType(block_type),
+            });
 
-                const gop = try ground.getOrPut(prev_block_type);
-                assert(gop.found_existing);
 
-                try gop.value_ptr.append(allocator, .{
-                    .rectangle = .{
-                        .x = BASE_RENDER_BLOCK_SIZE * cast(f32, col),
-                        .y = BASE_RENDER_BLOCK_SIZE * (cast(f32, row) - cast(f32, continous_blocks)),
-                        .height = cast(f32, continous_blocks) * BASE_RENDER_BLOCK_SIZE,
-                        .width = BASE_RENDER_BLOCK_SIZE,
-                    },
-                    .color = getBlockColor(prev_block_type),
-                    .is_blocking = getCollisionType(prev_block_type),
-                });
-                continous_blocks = 1;
-                continue;
-            }
-
-            const is_last_row = row == layer_height - 1;
-            const current_block = matrix[row][col];
-            const current_block_type: GroundGridBlock = @enumFromInt(current_block);
-
-            if (is_last_row) {
-                const gop = try ground.getOrPut(current_block_type);
-                assert(gop.found_existing);
-
-                try gop.value_ptr.append(allocator, .{
-                    .rectangle = .{
-                        .x = BASE_RENDER_BLOCK_SIZE * cast(f32, col),
-                        .y = BASE_RENDER_BLOCK_SIZE * (cast(f32, row + 1) - cast(f32, continous_blocks)),
-                        .height = cast(f32, continous_blocks) * BASE_RENDER_BLOCK_SIZE,
-                        .width = BASE_RENDER_BLOCK_SIZE,
-                    },
-                    .color = getBlockColor(current_block_type),
-                    .is_blocking = getCollisionType(current_block_type),
-                });
-                continous_blocks = 1;
-            }
+            // const is_same_block = matrix[row - 1][col] == matrix[row][col];
+            //
+            // if (is_same_block) {
+            //     continous_blocks += 1;
+            // } else {
+            //     const prev_block = matrix[row - 1][col];
+            //     const prev_block_type: GroundGridBlock = @enumFromInt(prev_block);
+            //     if (prev_block_type.isBlank()) {
+            //         continous_blocks = 1;
+            //         continue;
+            //     }
+            //
+            //     const gop = try ground.getOrPut(prev_block_type);
+            //     assert(gop.found_existing);
+            //
+            //     try gop.value_ptr.append(allocator, .{
+            //         .rectangle = .{
+            //             .x = BASE_RENDER_BLOCK_SIZE * ncast(f32, col),
+            //             .y = BASE_RENDER_BLOCK_SIZE * (ncast(f32, row) - ncast(f32, continous_blocks)),
+            //             .height = ncast(f32, continous_blocks) * BASE_RENDER_BLOCK_SIZE,
+            //             .width = BASE_RENDER_BLOCK_SIZE,
+            //         },
+            //         .color = getBlockColor(prev_block_type),
+            //         .is_blocking = getCollisionType(prev_block_type),
+            //     });
+            //     continous_blocks = 1;
+            //     continue;
+            // }
+            //
+            // const is_last_row = row == layer_height - 1;
+            // const current_block = matrix[row][col];
+            // const current_block_type: GroundGridBlock = @enumFromInt(current_block);
+            //
+            // if (is_last_row) {
+            //     const gop = try ground.getOrPut(current_block_type);
+            //     assert(gop.found_existing);
+            //
+            //     try gop.value_ptr.append(allocator, .{
+            //         .rectangle = .{
+            //             .x = BASE_RENDER_BLOCK_SIZE * ncast(f32, col),
+            //             .y = BASE_RENDER_BLOCK_SIZE * (ncast(f32, row + 1) - ncast(f32, continous_blocks)),
+            //             .height = ncast(f32, continous_blocks) * BASE_RENDER_BLOCK_SIZE,
+            //             .width = BASE_RENDER_BLOCK_SIZE,
+            //         },
+            //         .color = getBlockColor(current_block_type),
+            //         .is_blocking = getCollisionType(current_block_type),
+            //     });
+            //     continous_blocks = 1;
+            // }
         }
     }
 
@@ -174,4 +188,39 @@ pub fn getGroundTiles(
         .asset_path = path,
         .pixel_size = layer.__gridSize,
     };
+}
+
+pub const Checkpoints = struct {
+    position: rl.Vector2,
+
+    pub fn init(position: rl.Vector2) Checkpoints {
+        return .{
+            .position = position,
+        };
+    }
+};
+
+pub fn getCheckpoints(
+    allocator: std.mem.Allocator,
+    level: data.ldtk.Level,
+) !std.ArrayList(Checkpoints) {
+    const layer = getLayer(level, .Entities) catch unreachable;
+
+    const all_instance = layer.entityInstances;
+    var checkpoint_instances = std.ArrayList(Checkpoints).empty;
+    
+    const CheckpointsKey = @tagName(world.defs.Entity.Checkpoints)[0..];
+
+    for(all_instance) |instance| {
+        if (mem.eql(u8, instance.__identifier, CheckpointsKey)) {
+            try checkpoint_instances.append(allocator,
+                Checkpoints.init(.init(
+                    ncast(f32, instance.px[0]),
+                    ncast(f32, instance.px[1]),
+                ))
+            );
+        }
+    }
+
+    return checkpoint_instances;
 }
