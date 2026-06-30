@@ -134,10 +134,12 @@ pub const Game = struct {
             self.player.drawAnimation(delta_time);
 
             for (self.checkpoints.items) |item| {
-                rl.drawCircle(
+                rl.drawRectangle(
                     data.cast.ncast(i32, item.position.x),
                     data.cast.ncast(i32, item.position.y),
-                    100.0, rl.Color.red
+                    world.constants.BASE_RENDER_BLOCK_SIZE,
+                    world.constants.BASE_RENDER_BLOCK_SIZE,
+                    rl.Color.white
                 );
             }
         }

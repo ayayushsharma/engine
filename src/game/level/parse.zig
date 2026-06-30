@@ -211,12 +211,13 @@ pub fn getCheckpoints(
     
     const CheckpointsKey = @tagName(world.defs.Entity.Checkpoints)[0..];
 
+    const RENDER_SCALE: f32 = world.constants.RENDER_SCALE;
     for(all_instance) |instance| {
         if (mem.eql(u8, instance.__identifier, CheckpointsKey)) {
             try checkpoint_instances.append(allocator,
                 Checkpoints.init(.init(
-                    ncast(f32, instance.px[0]),
-                    ncast(f32, instance.px[1]),
+                    ncast(f32, instance.px[0]) * RENDER_SCALE,
+                    ncast(f32, instance.px[1]) * RENDER_SCALE,
                 ))
             );
         }
