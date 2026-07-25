@@ -82,6 +82,8 @@ pub fn mergeGroundBlocks(
 
     const grid = layer.intGridCsv;
 
+    const BASE_RENDER_BLOCK_SIZE: f32 = world.constants.BASE_RENDER_BLOCK_SIZE;
+
     for (0..layer_height) |row| {
         for (0..layer_width) |col| {
             matrix[row][col] = grid[index];
@@ -94,61 +96,29 @@ pub fn mergeGroundBlocks(
         gop.value_ptr.* = std.ArrayList(engine.cm.models.RectangleItem).empty;
     }
 
-    const BASE_RENDER_BLOCK_SIZE: f32 = world.constants.BASE_RENDER_BLOCK_SIZE;
-
     for (0..layer_width) |col| {
-        var continous_blocks: i32 = 1;
+        for (0..layer_height) |row| {
 
-        for (1..layer_height) |row| {
-            const is_same_block = matrix[row - 1][col] == matrix[row][col];
-
-            if (is_same_block) {
-                continous_blocks += 1;
-            } else {
-                const prev_block = matrix[row - 1][col];
-                const prev_block_type: GroundGridBlock = @enumFromInt(prev_block);
-                if (prev_block_type.isBlank()) {
-                    continous_blocks = 1;
-                    continue;
-                }
-
-                const gop = try ground.getOrPut(prev_block_type);
-                assert(gop.found_existing);
-
-                try gop.value_ptr.append(allocator, .{
-                    .rectangle = .{
-                        .x = BASE_RENDER_BLOCK_SIZE * cast(f32, col),
-                        .y = BASE_RENDER_BLOCK_SIZE * (cast(f32, row) - cast(f32, continous_blocks)),
-                        .height = cast(f32, continous_blocks) * BASE_RENDER_BLOCK_SIZE,
-                        .width = BASE_RENDER_BLOCK_SIZE,
-                    },
-                    .color = getBlockColor(prev_block_type),
-                    .is_blocking = getCollisionType(prev_block_type),
-                });
-                continous_blocks = 1;
+            const block = matrix[row][col];
+            const block_type: GroundGridBlock = @enumFromInt(block);
+            if (block_type.isBlank()) {
                 continue;
             }
 
-            const is_last_row = row == layer_height - 1;
-            const current_block = matrix[row][col];
-            const current_block_type: GroundGridBlock = @enumFromInt(current_block);
+            const gop = try ground.getOrPut(block_type);
+            assert(gop.found_existing);
 
-            if (is_last_row) {
-                const gop = try ground.getOrPut(current_block_type);
-                assert(gop.found_existing);
+            try gop.value_ptr.append(allocator, .{
+                .rectangle = .{
+                    .x = BASE_RENDER_BLOCK_SIZE * cast(f32, col),
+                    .y = BASE_RENDER_BLOCK_SIZE * cast(f32, row),
+                    .height = BASE_RENDER_BLOCK_SIZE,
+                    .width = BASE_RENDER_BLOCK_SIZE,
+                },
+                .color = getBlockColor(block_type),
+                .is_blocking = getCollisionType(block_type),
+            });
 
-                try gop.value_ptr.append(allocator, .{
-                    .rectangle = .{
-                        .x = BASE_RENDER_BLOCK_SIZE * cast(f32, col),
-                        .y = BASE_RENDER_BLOCK_SIZE * (cast(f32, row + 1) - cast(f32, continous_blocks)),
-                        .height = cast(f32, continous_blocks) * BASE_RENDER_BLOCK_SIZE,
-                        .width = BASE_RENDER_BLOCK_SIZE,
-                    },
-                    .color = getBlockColor(current_block_type),
-                    .is_blocking = getCollisionType(current_block_type),
-                });
-                continous_blocks = 1;
-            }
         }
     }
 

@@ -1,5 +1,5 @@
 [tools]
-zig = "0.16"
+zig = "0.17.0-dev.135+9df02121d"
 "npm:http-server" = "latest"
 prettier = "latest"
 
@@ -8,7 +8,7 @@ run = "zig fmt . && prettier --check ./web --write"
 description = "Formats codebase"
 
 [tasks.debug-run]
-run = "mise exec zig@master -- zig build run"
+run = "zig build run"
 description = "Runs the Game"
 
 [tasks.run]
