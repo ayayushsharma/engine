@@ -54,7 +54,7 @@ fn getCollisionType(block: world.defs.GroundGridBlock) engine.cm.models.Collisio
     };
 }
 
-pub fn mergeGroundBlocks(
+pub fn getGroundBlocks(
     allocator: mem.Allocator,
     layer: data.ldtk.LayerInstance,
 ) !GridBlocks {

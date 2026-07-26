@@ -3,10 +3,18 @@ pub const Layers = enum {
     GroundGrid,
     GroundTiles,
 
+    Interactables,
+
     pub fn tagName(self: Layers) []const u8 {
         return @tagName(self)[0..];
     }
 };
+
+
+pub const InteractableTypes = enum {
+    Checkpoint,
+};
+
 
 /// Definition of block types in the world
 pub const GroundGridBlock = enum(i32) {

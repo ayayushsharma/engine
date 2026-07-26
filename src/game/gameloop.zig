@@ -43,7 +43,7 @@ pub const Game = struct {
         const ldtk_level = try level.getLevelData(ldtk_json, level_id);
 
         const groundLayer = try level.getLayer(ldtk_level, .GroundGrid);
-        var grids = try level.mergeGroundBlocks(allocator, groundLayer);
+        var grids = try level.getGroundBlocks(allocator, groundLayer);
 
         const groundTileLayer = try level.getLayer(ldtk_level, .GroundTiles);
 
