@@ -11,4 +11,9 @@ pub const RectangleItem = struct {
     is_blocking: CollisionType,
 };
 
-pub const CollisionType = enum { Blocking, TopBlocking, BottomBlocking, NotBlocking };
+pub const CollisionType = enum {
+    Blocking,
+    TopBlocking,
+    BottomBlocking,
+    NotBlocking,
+};

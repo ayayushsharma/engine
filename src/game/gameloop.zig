@@ -42,12 +42,20 @@ pub const Game = struct {
         const ldtk_json = raw_ldtk_json.value;
         const ldtk_level = try level.getLevelData(ldtk_json, level_id);
 
-        const groundLayer = try level.getLayer(ldtk_level, .GroundGrid);
-        var grids = try level.getGroundBlocks(allocator, groundLayer);
+        const offset = level.getOffset(ldtk_level);
+
+        var grids = try level.getGroundBlocks(allocator, ldtk_level, offset);
 
         const groundTileLayer = try level.getLayer(ldtk_level, .GroundTiles);
 
         const groundTile = level.getGroundTiles(allocator, groundTileLayer);
+
+        const checkpoints = level.getLayer(ldtk_level, .Interactables) catch unreachable;
+
+        const ncast = data.cast.ncast;
+
+        player_obj.position.x = ncast(f32, checkpoints.entityInstances[0].px[0]);
+        player_obj.position.y = ncast(f32, checkpoints.entityInstances[0].px[1]);
 
         std.debug.print("Asset Location : {s}\n", .{groundTile.asset_path});
 
@@ -56,6 +64,7 @@ pub const Game = struct {
             groundTile.asset_path,
             groundTile.pixel_size,
             world.constants.BASE_RENDER_BLOCK_SIZE,
+            offset,
         );
 
         const wallpaper = try rl.loadTexture("resources/assets/Background/nature_3/origbig.png");

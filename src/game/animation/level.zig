@@ -1,6 +1,6 @@
 const std = @import("std");
 const rl = @import("raylib");
-const animation_types = @import("types.zig").animation_types;
+const AnimationTypes = @import("types.zig").AnimationTypes;
 const engine = @import("engine");
 const direction = engine.physics.direction;
 const Texture = engine.renderer.texture.Texture;
@@ -15,12 +15,14 @@ pub const BackgroundAnimation = struct {
     tile_data: []data.ldtk.TileInstance,
     pixel_size: i32,
     render_pixel_size: i32,
+    level_offset: engine.defs.LevelOffset,
 
     pub fn init(
         tile_data: []data.ldtk.TileInstance,
         asset_path: [:0]const u8,
         pixel_size: i32,
         render_pixel_size: i32,
+        level_offset: engine.defs.LevelOffset,
     ) !BackgroundAnimation {
         const texture = try Texture.init_tile(asset_path, pixel_size);
         return .{
@@ -28,6 +30,7 @@ pub const BackgroundAnimation = struct {
             .pixel_size = pixel_size,
             .tile_data = tile_data,
             .render_pixel_size = render_pixel_size,
+            .level_offset = level_offset,
         };
     }
 
@@ -41,8 +44,8 @@ pub const BackgroundAnimation = struct {
             const scale = ncast(f32, @divExact(self.render_pixel_size, self.pixel_size));
 
             const target_rectangle = rl.Rectangle.init(
-                ncast(f32, tile_x) * scale,
-                ncast(f32, tile_y) * scale,
+                ncast(f32, tile_x + self.level_offset.x) * scale,
+                ncast(f32, tile_y + self.level_offset.y) * scale,
                 ncast(f32, self.render_pixel_size),
                 ncast(f32, self.render_pixel_size),
             );

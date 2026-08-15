@@ -10,11 +10,9 @@ pub const Layers = enum {
     }
 };
 
-
 pub const InteractableTypes = enum {
     Checkpoint,
 };
-
 
 /// Definition of block types in the world
 pub const GroundGridBlock = enum(i32) {

@@ -7,22 +7,12 @@ const engine = @import("engine");
 const log = @import("log");
 
 const assert = std.debug.assert;
-const cast = data.cast.ncast;
+const ncast = data.cast.ncast;
 
 pub const LdtkProcessingErr = error{
     LevelNotFound,
     LayerNotFound,
 };
-
-pub fn getLayer(level: data.ldtk.Level, layer: world.defs.Layers) !data.ldtk.LayerInstance {
-    const layer_instances = level.layerInstances.?;
-    for (layer_instances) |layer_instance| {
-        if (mem.eql(u8, layer_instance.__identifier, layer.tagName())) {
-            return layer_instance;
-        }
-    }
-    return LdtkProcessingErr.LayerNotFound;
-}
 
 pub fn getLevelData(ldtk_json: data.ldtk.LdtkJSON, level_id: []const u8) !data.ldtk.Level {
     const loaded_levels = ldtk_json.levels;
@@ -32,6 +22,20 @@ pub fn getLevelData(ldtk_json: data.ldtk.LdtkJSON, level_id: []const u8) !data.l
         }
     }
     return LdtkProcessingErr.LevelNotFound;
+}
+
+pub fn getOffset(level: data.ldtk.Level) engine.defs.LevelOffset {
+    return .{ .x = level.worldX, .y = level.worldY };
+}
+
+pub fn getLayer(level: data.ldtk.Level, layer: world.defs.Layers) !data.ldtk.LayerInstance {
+    const layer_instances = level.layerInstances.?;
+    for (layer_instances) |layer_instance| {
+        if (mem.eql(u8, layer_instance.__identifier, layer.tagName())) {
+            return layer_instance;
+        }
+    }
+    return LdtkProcessingErr.LayerNotFound;
 }
 
 pub const GridBlocks = std.AutoHashMap(world.defs.GroundGridBlock, std.ArrayList(engine.cm.models.RectangleItem));
@@ -56,8 +60,10 @@ fn getCollisionType(block: world.defs.GroundGridBlock) engine.cm.models.Collisio
 
 pub fn getGroundBlocks(
     allocator: mem.Allocator,
-    layer: data.ldtk.LayerInstance,
+    level: data.ldtk.Level,
+    offset: engine.defs.LevelOffset,
 ) !GridBlocks {
+    const layer = try getLayer(level, .GroundGrid);
     var ground: GridBlocks = .init(allocator);
     const layer_height: usize = @intCast(layer.__cHei);
     const layer_width: usize = @intCast(layer.__cWid);
@@ -82,7 +88,9 @@ pub fn getGroundBlocks(
 
     const grid = layer.intGridCsv;
 
-    const BASE_RENDER_BLOCK_SIZE: f32 = world.constants.BASE_RENDER_BLOCK_SIZE;
+    const BASE_PIXEL_BLOCK_SIZE = world.constants.BASE_PIXEL_BLOCK_SIZE;
+    const BASE_RENDER_BLOCK_SIZE = world.constants.BASE_RENDER_BLOCK_SIZE;
+    const RENDER_SCALE = world.constants.RENDER_SCALE;
 
     for (0..layer_height) |row| {
         for (0..layer_width) |col| {
@@ -96,10 +104,9 @@ pub fn getGroundBlocks(
         gop.value_ptr.* = std.ArrayList(engine.cm.models.RectangleItem).empty;
     }
 
-    for (0..layer_width) |col| {
-        for (0..layer_height) |row| {
-
-            const block = matrix[row][col];
+    for (0..layer_width) |raw_col| {
+        for (0..layer_height) |raw_row| {
+            const block = matrix[raw_row][raw_col];
             const block_type: GroundGridBlock = @enumFromInt(block);
             if (block_type.isBlank()) {
                 continue;
@@ -108,17 +115,19 @@ pub fn getGroundBlocks(
             const gop = try ground.getOrPut(block_type);
             assert(gop.found_existing);
 
+            const col = ncast(i32, raw_col);
+            const row = ncast(i32, raw_row);
+
             try gop.value_ptr.append(allocator, .{
                 .rectangle = .{
-                    .x = BASE_RENDER_BLOCK_SIZE * cast(f32, col),
-                    .y = BASE_RENDER_BLOCK_SIZE * cast(f32, row),
+                    .x = ncast(f32, (BASE_PIXEL_BLOCK_SIZE * col + offset.x) * RENDER_SCALE),
+                    .y = ncast(f32, (BASE_PIXEL_BLOCK_SIZE * row + offset.y) * RENDER_SCALE),
                     .height = BASE_RENDER_BLOCK_SIZE,
                     .width = BASE_RENDER_BLOCK_SIZE,
                 },
                 .color = getBlockColor(block_type),
                 .is_blocking = getCollisionType(block_type),
             });
-
         }
     }
 

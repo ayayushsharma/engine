@@ -4,6 +4,7 @@ pub const Camera = @import("camera/root.zig").Camera;
 pub const physics = @import("physics/root.zig");
 pub const cm = @import("cm/root.zig");
 pub const renderer = @import("renderer/root.zig");
+pub const defs = @import("defs.zig");
 
 const rl = @import("raylib");
 

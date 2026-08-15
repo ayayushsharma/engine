@@ -1,6 +1,6 @@
 const std = @import("std");
 const rl = @import("raylib");
-const animation_types = @import("types.zig").animation_types;
+const AnimationTypes = @import("types.zig").AnimationTypes;
 const engine = @import("engine");
 const direction = engine.physics.direction;
 const Texture = engine.renderer.texture.Texture;
@@ -42,7 +42,7 @@ pub const PlayerAnimation = struct {
         is_partial: bool = false,
         frame_index: ?i32 = null,
         priority: i32,
-        type: animation_types,
+        type: AnimationTypes,
         frame_timing_ms: f32 = 100,
     };
 
@@ -135,8 +135,8 @@ pub const PlayerAnimation = struct {
         return self.animation_types[@intFromEnum(state)];
     }
 
-    fn getAnimationType(self: *PlayerAnimation, state: detailed_animation_states) animation_types {
-        const anime_type: animation_types = @enumFromInt(self.animation_types[@intFromEnum(state)]);
+    fn getAnimationType(self: *PlayerAnimation, state: detailed_animation_states) AnimationTypes {
+        const anime_type: AnimationTypes = @enumFromInt(self.animation_types[@intFromEnum(state)]);
         return anime_type;
     }
 
