@@ -5,6 +5,7 @@ const player = @import("player/player.zig");
 const level = @import("level/root.zig").level_parse;
 const engine = @import("engine");
 const world = @import("world/root.zig");
+const log = @import("log");
 
 const animation = @import("animation/root.zig");
 
@@ -26,6 +27,8 @@ pub const Game = struct {
     back_animation: animation.BackgroundAnimation,
 
     wallpaper: rl.Texture,
+
+    checkpoints: data.ldtk.LayerInstance,
 
     pub fn init(
         allocator: std.mem.Allocator,
@@ -54,8 +57,10 @@ pub const Game = struct {
 
         const ncast = data.cast.ncast;
 
-        player_obj.position.x = ncast(f32, checkpoints.entityInstances[0].px[0]);
-        player_obj.position.y = ncast(f32, checkpoints.entityInstances[0].px[1]);
+        const RENDER_SCALE = world.constants.RENDER_SCALE;
+
+        player_obj.position.x = ncast(f32, (checkpoints.entityInstances[0].px[0] + offset.x) * RENDER_SCALE);
+        player_obj.position.y = ncast(f32, (checkpoints.entityInstances[0].px[1] + offset.y) * RENDER_SCALE);
 
         std.debug.print("Asset Location : {s}\n", .{groundTile.asset_path});
 
@@ -93,6 +98,8 @@ pub const Game = struct {
 
             .back_animation = background_texture,
             .wallpaper = wallpaper,
+
+            .checkpoints = checkpoints,
         };
     }
 
@@ -130,6 +137,7 @@ pub const Game = struct {
             );
             self.wallpaper.drawEx(wallpaper_pos, 0, 4, .white);
             self.back_animation.drawAnimationFrame();
+
             self.player.drawAnimation(delta_time);
         }
 
